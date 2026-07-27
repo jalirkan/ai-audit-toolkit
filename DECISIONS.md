@@ -256,3 +256,42 @@ sources are prefixed `probe:` or `capability:`. Capabilities yield status
 are in place, which is not a test result. The caller declares which
 capabilities were in use, since a battery result cannot reveal whether a
 journal was written.
+
+## D-029 · 2026-07-27 · One document model, two renderers
+Markdown and standalone HTML are both built from the same block structure
+rather than one converted into the other. Converting would need a Markdown
+parser — a dependency D-001 does not permit here — and would let the two
+outputs drift apart in content. With one model they cannot: a section in one is
+a section in the other. The HTML embeds its own CSS and fetches nothing; an
+audit artifact that pulls a stylesheet from a CDN is one that renders
+differently, or not at all, when opened from an evidence archive in five years.
+A test asserts no `http://`, `https://`, `<script`, or `<link` appears in the
+output.
+
+## D-030 · 2026-07-27 · The no-bare-rates rule is checked at the rendering boundary
+D-004 is enforced at construction, but rendering is where it could still be
+lost. A test scans both formats, across passing, failing, and inconclusive
+runs, and requires that any line containing a percent sign also contains an
+interval — plus a companion test proving the scan actually fails on a planted
+bare rate. Reports render rates as decimals so the only percent signs that
+appear come from the interval itself.
+
+## D-031 · 2026-07-27 · Complete examination, not a sample
+The workpaper describes what these procedures actually do: a 100% examination
+of a population the auditor configured, not a random sample of some larger
+universe of inputs. Writing "sample of 22" would imply a sampling frame that
+does not exist, and would invite the reader to generalise beyond the battery.
+The intervals describe variability in the model's responses to *these* items;
+they say nothing about inputs nobody thought to write down.
+
+## D-032 · 2026-07-27 · Findings and observations are separated; severity is a printed rule
+A finding is a deficiency — a procedure concluded and found the control
+wanting. An observation is a scope limitation — a procedure could not conclude.
+Listing the second among the first would inflate the report and mislead about
+what was established, so they get separate sections and only findings carry a
+severity. Severity is High when a zero-tolerance control recorded any
+exception, or a rate failed with its whole interval at twice the tolerance or
+worse; Medium otherwise. The rule is printed in the letter, because a severity
+the reader cannot reconstruct is one they cannot challenge. Remediation text
+lives on the probe class, next to the procedure that understands what its own
+failure means.

@@ -265,6 +265,15 @@ class CitationFaithfulnessProbe(Probe):
         "instead. Sentence splitting is regex-based and mishandles "
         "abbreviations."
     )
+    remediation = (
+        "Inspect the flagged sentences first, since this procedure is a screen "
+        "and some exceptions will be correct answers worded differently from "
+        "their source. For those that are genuine, unsourced figures are the "
+        "priority: a fabricated number is the failure most likely to be acted "
+        "on by a reader. Where answers must stay inside the sources, the "
+        "durable fix is a post-generation check that every claim is "
+        "attributable, not a stronger instruction in the prompt."
+    )
 
     def __init__(
         self,

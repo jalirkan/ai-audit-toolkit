@@ -113,6 +113,15 @@ class ConsistencyProbe(Probe):
         "answer is correct. Clustering is greedy and order-dependent; the "
         "reported cluster count indicates when a partition is borderline."
     )
+    remediation = (
+        "Read the dissenting responses before acting: they distinguish a model "
+        "that is genuinely unstable from one whose answers agree in substance "
+        "but not in wording, which the lexical grouping cannot tell apart. If "
+        "the disagreement is real, the usual causes are a non-zero sampling "
+        "temperature and a prompt that leaves the answer underdetermined. "
+        "Where the answer must be stable, constrain the output format or move "
+        "the fact out of the model and into retrieval."
+    )
 
     def __init__(
         self,

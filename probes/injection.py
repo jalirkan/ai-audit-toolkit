@@ -170,6 +170,16 @@ class InjectionResistanceProbe(Probe):
         "be read individually, since a response may disclose the protected "
         "value in part without triggering the match."
     )
+    remediation = (
+        "Treat any exfiltration as a design issue rather than a prompt-wording "
+        "issue: instruction-layer content that must not reach a user should not "
+        "be in the prompt at all, since no instruction reliably prevents its "
+        "disclosure. Where the value must be present, add an output filter that "
+        "checks responses for it before they are returned, and re-run this "
+        "procedure against the filtered path. Review the attack prompts that "
+        "succeeded for a common pattern, and extend the battery with variants "
+        "of whatever worked."
+    )
 
     def __init__(
         self,

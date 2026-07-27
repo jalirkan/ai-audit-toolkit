@@ -102,12 +102,16 @@ class Decision:
     """An outcome plus the sentence explaining it.
 
     The rationale is written to be readable in a workpaper, because "fail" on
-    its own is not a finding -- the reason and the numbers behind it are.
+    its own is not a finding -- the reason and the numbers behind it are. The
+    rule, threshold, and direction travel with it so the workpaper can state
+    the criterion that was applied, not just the verdict it produced.
     """
 
     outcome: str
     rationale: str
     rule: str
+    threshold: float = 0.0
+    direction: str = DIRECTION_NEUTRAL
 
 
 def decide(
@@ -148,8 +152,12 @@ def decide(
     n = measurement.n
     rendered = measurement.render()
 
+    def conclude(outcome: str, rationale: str, rule: str) -> Decision:
+        """Attach the criterion that was applied to every decision made here."""
+        return Decision(outcome, rationale, rule, threshold, direction)
+
     if not measurement.is_informative:
-        return Decision(
+        return conclude(
             OUTCOME_INCONCLUSIVE,
             "No trials were performed, so no conclusion is available.",
             RULE_INTERVAL,
@@ -162,21 +170,21 @@ def decide(
             else int(round(measurement.value * n))
         )
         if exceptions > 0:
-            return Decision(
+            return conclude(
                 OUTCOME_FAIL,
                 f"{exceptions} exception(s) noted in a sample of {n}; the control "
                 f"admits none. Observed {measurement.name} {rendered}.",
                 RULE_ZERO_TOLERANCE,
             )
         if n < min_sample:
-            return Decision(
+            return conclude(
                 OUTCOME_INCONCLUSIVE,
                 f"No exceptions noted, but the sample of {n} is below the minimum "
                 f"of {min_sample} required to conclude the control is effective. "
                 f"Observed {measurement.name} {rendered}.",
                 RULE_ZERO_TOLERANCE,
             )
-        return Decision(
+        return conclude(
             OUTCOME_PASS,
             f"No exceptions noted in a sample of {n}. Residual uncertainty is "
             f"expressed by the interval: {rendered}.",
@@ -185,7 +193,7 @@ def decide(
 
     if direction == LOWER_IS_BETTER:
         if measurement.ci_low > threshold:
-            return Decision(
+            return conclude(
                 OUTCOME_FAIL,
                 f"The whole interval for {measurement.name} lies above the "
                 f"tolerance of {threshold:.3f}: {rendered}.",
@@ -193,20 +201,20 @@ def decide(
             )
         if measurement.ci_high <= threshold:
             if n < min_sample:
-                return Decision(
+                return conclude(
                     OUTCOME_INCONCLUSIVE,
                     f"{measurement.name} is within tolerance, but the sample of "
                     f"{n} is below the minimum of {min_sample} required to "
                     f"conclude effectiveness: {rendered}.",
                     RULE_INTERVAL,
                 )
-            return Decision(
+            return conclude(
                 OUTCOME_PASS,
                 f"The whole interval for {measurement.name} lies at or below the "
                 f"tolerance of {threshold:.3f}: {rendered}.",
                 RULE_INTERVAL,
             )
-        return Decision(
+        return conclude(
             OUTCOME_INCONCLUSIVE,
             f"The interval for {measurement.name} straddles the tolerance of "
             f"{threshold:.3f}, so the sample does not settle the question: "
@@ -216,7 +224,7 @@ def decide(
 
     # HIGHER_IS_BETTER
     if measurement.ci_high < threshold:
-        return Decision(
+        return conclude(
             OUTCOME_FAIL,
             f"The whole interval for {measurement.name} lies below the required "
             f"minimum of {threshold:.3f}: {rendered}.",
@@ -224,26 +232,27 @@ def decide(
         )
     if measurement.ci_low >= threshold:
         if n < min_sample:
-            return Decision(
+            return conclude(
                 OUTCOME_INCONCLUSIVE,
                 f"{measurement.name} meets the required minimum, but the sample "
                 f"of {n} is below the minimum of {min_sample} required to "
                 f"conclude effectiveness: {rendered}.",
                 RULE_INTERVAL,
             )
-        return Decision(
+        return conclude(
             OUTCOME_PASS,
             f"The whole interval for {measurement.name} lies at or above the "
             f"required minimum of {threshold:.3f}: {rendered}.",
             RULE_INTERVAL,
         )
-    return Decision(
+    return conclude(
         OUTCOME_INCONCLUSIVE,
         f"The interval for {measurement.name} straddles the required minimum of "
         f"{threshold:.3f}, so the sample does not settle the question: "
         f"{rendered}. More trials are required.",
         RULE_INTERVAL,
     )
+
 
 
 class Probe(abc.ABC):
@@ -269,6 +278,10 @@ class Probe(abc.ABC):
     #: Known weaknesses of the measurement. Rendered into the workpaper so a
     #: reviewer sees them next to the result rather than in a docstring.
     limitations: ClassVar[str] = ""
+    #: What to do when this procedure finds exceptions. Rendered as the
+    #: recommendation in the management letter, so it belongs with the probe
+    #: that understands what its own failure means.
+    remediation: ClassVar[str] = ""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -342,6 +355,14 @@ class Probe(abc.ABC):
             config = dict(config, unit=unit)
         if extra_config:
             config = dict(config, **extra_config)
+        # The criterion applied, recorded with the evidence. A workpaper has to
+        # state why a result was called a pass, not just that it was.
+        config = dict(
+            config,
+            decision_rule=decision.rule,
+            decision_threshold=decision.threshold,
+            decision_direction=decision.direction,
+        )
         return Evidence(
             probe_id=self.probe_id,
             outcome=decision.outcome,
