@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "nist-ai-rmf",
+  "name": "NIST AI Risk Management Framework",
+  "publication": "NIST AI 100-1, AI RMF 1.0",
+  "partial": true,
+  "ids_verified": "2026-07-27",
+  "note": "Partial catalog. Only subcategories this toolkit can produce technical evidence for are listed; the framework contains many more, and their absence here is not a statement about them. Every summary below is original text written for this project describing what the subcategory addresses. No text from the publication is reproduced -- consult NIST AI 100-1 for the authoritative wording, and re-verify these identifiers against the current edition before relying on them in a report.",
+  "controls": [
+    {
+      "id": "MEASURE 2.5",
+      "topic": "reliability",
+      "summary": "Reliability of the system is measured, and the measures chosen are written down rather than left implicit."
+    },
+    {
+      "id": "MEASURE 2.6",
+      "topic": "monitoring",
+      "summary": "Performance and safety behaviour are monitored while the system is running, so incidents are noticed quickly."
+    },
+    {
+      "id": "MEASURE 2.7",
+      "topic": "security",
+      "summary": "Security and resilience concerns identified earlier are actually tested, and the results recorded."
+    },
+    {
+      "id": "MEASURE 2.8",
+      "topic": "traceability",
+      "summary": "Transparency and accountability risks are examined, including keeping histories and audit logs that let a reviewer trace how an output came about."
+    },
+    {
+      "id": "MEASURE 2.9",
+      "topic": "validation",
+      "summary": "The model is validated and its output read in context, rather than taken at face value."
+    },
+    {
+      "id": "MEASURE 2.11",
+      "topic": "fairness",
+      "summary": "Fairness and bias concerns identified earlier are evaluated and the results documented."
+    },
+    {
+      "id": "MANAGE 4.1",
+      "topic": "post-deployment",
+      "summary": "The system is monitored after deployment so that problems emerging in service are caught."
+    }
+  ]
+}

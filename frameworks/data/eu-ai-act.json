@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "eu-ai-act",
+  "name": "EU Artificial Intelligence Act",
+  "publication": "Regulation (EU) 2024/1689",
+  "partial": true,
+  "ids_verified": "2026-07-27",
+  "note": "Partial catalog covering articles this toolkit can produce technical evidence for, drawn from the requirements for high-risk systems. Every summary below is original text written for this project describing what the article addresses. The Regulation's own text is not reproduced -- consult the Official Journal for the authoritative wording. Whether these articles apply at all depends on the system's classification, which is a legal question this toolkit does not answer.",
+  "controls": [
+    {
+      "id": "Article 9",
+      "topic": "risk-management",
+      "summary": "A risk management process runs across the system's lifecycle, including testing against the risks it identifies."
+    },
+    {
+      "id": "Article 10",
+      "topic": "data-governance",
+      "summary": "Training, validation and testing data are governed for quality, relevance and representativeness."
+    },
+    {
+      "id": "Article 12",
+      "topic": "traceability",
+      "summary": "Events are recorded automatically over the system's lifetime, to a standard that supports tracing what happened."
+    },
+    {
+      "id": "Article 13",
+      "topic": "documentation",
+      "summary": "Deployers are given enough information to understand how the system behaves and where it should not be trusted."
+    },
+    {
+      "id": "Article 15",
+      "topic": "robustness",
+      "summary": "The system reaches an appropriate level of accuracy, robustness and cybersecurity, including resilience against attempts to manipulate it through its inputs."
+    },
+    {
+      "id": "Article 72",
+      "topic": "post-market",
+      "summary": "Performance is monitored once the system is in service, not only before release."
+    }
+  ]
+}

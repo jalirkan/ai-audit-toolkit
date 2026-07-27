@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "iso-iec-42001",
+  "name": "ISO/IEC 42001 AI management system",
+  "publication": "ISO/IEC 42001:2023, Annex A",
+  "partial": true,
+  "ids_verified": "2026-07-27",
+  "note": "Partial catalog. Annex A contains 38 controls across objectives A.2 to A.10; only those this toolkit can produce technical evidence for are listed. Every summary below is original text written for this project describing what the control addresses. No text from the standard is reproduced -- ISO/IEC 42001:2023 is a purchased document and its wording is not reproducible here. Re-verify these identifiers against your own copy before relying on them in a report.",
+  "controls": [
+    {
+      "id": "A.6.2.4",
+      "topic": "validation",
+      "summary": "The AI system is verified and validated before it is relied upon, with the approach and the results recorded."
+    },
+    {
+      "id": "A.6.2.6",
+      "topic": "monitoring",
+      "summary": "The deployed system is operated and monitored on an ongoing basis."
+    },
+    {
+      "id": "A.6.2.8",
+      "topic": "traceability",
+      "summary": "Events during operation are logged so that behaviour can be reconstructed after the fact."
+    },
+    {
+      "id": "A.8.2",
+      "topic": "documentation",
+      "summary": "Users are given documentation describing what the system does and where its limits are."
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "note": "Which toolkit capability provides evidence toward which control, and why. A mapping asserts that running the procedure produces evidence RELEVANT to the control -- never that the control is satisfied. Controls almost always require governance, policy, and documentation this toolkit cannot speak to. Each rationale is the argument an auditor would have to defend; disagree with one and change it.",
+  "mappings": [
+    {
+      "source": "probe:injection-resistance",
+      "references": [
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 15",
+          "rationale": "The article covers resilience against attempts to manipulate the system through its inputs; a canary exfiltration battery tests exactly that behaviour, for one class of attack."
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.7",
+          "rationale": "Provides a recorded test result for a security property, which is what the subcategory asks be evaluated and documented."
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.4",
+          "rationale": "Contributes one verification procedure, with its population and result, to the validation record for the system."
+        }
+      ]
+    },
+    {
+      "source": "probe:output-consistency",
+      "references": [
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.5",
+          "rationale": "Agreement under paraphrase is a documented reliability measure with a stated method, which is what the subcategory asks for."
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 15",
+          "rationale": "Speaks to consistent performance: a system that answers differently depending on phrasing is not performing consistently."
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.4",
+          "rationale": "A validation procedure whose population, sample and result are recorded."
+        }
+      ]
+    },
+    {
+      "source": "probe:citation-faithfulness",
+      "references": [
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.9",
+          "rationale": "Screens whether output is supported by the sources it was given, which is part of validating the model and reading its output in context."
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 15",
+          "rationale": "Unsupported claims against provided sources are an accuracy failure of the kind the article addresses."
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.4",
+          "rationale": "A validation procedure with a recorded population, sample and exception list."
+        }
+      ]
+    },
+    {
+      "source": "capability:evidence-journal",
+      "references": [
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.8",
+          "rationale": "A hash-chained log of every probe run, with inputs and outputs retained, is the audit history the subcategory describes keeping."
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.8",
+          "rationale": "Records events with enough detail to reconstruct what was tested and what came back."
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 12",
+          "rationale": "Provides automatic, tamper-evident recording of assurance activity. Note this covers the audit procedures, not the production system's own logging, which is what the article principally concerns."
+        }
+      ]
+    },
+    {
+      "source": "capability:drift-monitoring",
+      "references": [
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MANAGE 4.1",
+          "rationale": "Re-running a baselined battery and testing the difference for significance is post-deployment monitoring with a defined trigger."
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.6",
+          "rationale": "Tracks performance over time rather than at a single point, so a degradation after a model change is detected."
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.6",
+          "rationale": "Supports ongoing monitoring of a system already in operation."
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 72",
+          "rationale": "Contributes a repeatable technical procedure to post-market monitoring."
+        }
+      ]
+    },
+    {
+      "source": "capability:workpapers",
+      "references": [
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.8.2",
+          "rationale": "Generated workpapers state each procedure's limitations alongside its result, which feeds the documentation users need about where the system should not be trusted."
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 13",
+          "rationale": "Measured behaviour and its stated limits are inputs to the information a deployer needs; the toolkit supplies the measurements, not the instructions for use."
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.8",
+          "rationale": "Renders the recorded history into a form a reviewer can actually read and challenge."
+        }
+      ]
+    }
+  ]
+}

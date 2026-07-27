@@ -217,3 +217,42 @@ reason for the comparison, but it is sometimes the explanation for a
 "regression" that is really a different model. Baselines refuse to be
 overwritten without an explicit flag — silently replacing the reference point
 would make "no drift" true by construction.
+
+## D-025 · 2026-07-27 · D-003 is enforced structurally, not by discipline
+Framework catalogs hold an identifier plus a one-line summary written for this
+project. Two tests keep it that way: `MAX_SUMMARY_CHARS` (220) caps summary
+length, which an original one-liner fits and pasted framework text does not,
+and a scan rejects any quoted span of 60+ characters inside a catalog string —
+quoting is how copyrighted text would most plausibly arrive. Both were checked
+against a simulated paste to confirm they fire. Control identifiers were
+verified against current sources on 2026-07-27 and each catalog records that
+date, because framework identifiers change between editions and a reader
+deserves to see how stale a mapping might be.
+
+## D-026 · 2026-07-27 · Catalogs are partial and say so
+Each catalog lists only the controls this toolkit can produce technical
+evidence for. A control's absence is not a statement about it. Claiming
+complete coverage of ISO 42001 Annex A or the AI Act would be a much bigger
+assertion than the evidence supports, and would make every gap invisible.
+
+## D-027 · 2026-07-27 · A mapping is not a compliance claim
+Mapping a procedure to a control asserts the procedure produces evidence
+*relevant* to that control — never that the control is satisfied. Controls
+generally require governance, policy, and documentation no test harness can
+supply. Consequences in the code: every mapping carries a written rationale (an
+unargued mapping cannot be defended in review, so `ControlReference` refuses to
+be constructed without one), coverage reports the outcome next to the mapping,
+and a control evidenced by a *failing* probe is reported as
+`tested-with-exceptions` — covered and failing, which is different from both
+"covered" and "no evidence". Gaps are listed explicitly rather than omitted,
+since a coverage report that showed only what was tested would flatter the
+engagement.
+
+## D-028 · 2026-07-27 · Capabilities map to controls alongside probes
+Logging and monitoring controls are evidenced by the toolkit's journal, drift
+comparison, and generated workpapers rather than by any probe, so mapping
+sources are prefixed `probe:` or `capability:`. Capabilities yield status
+`evidence-present`, never a pass: a journal existing shows the technical means
+are in place, which is not a test result. The caller declares which
+capabilities were in use, since a battery result cannot reveal whether a
+journal was written.
