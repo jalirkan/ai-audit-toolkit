@@ -230,6 +230,7 @@ class ConsistencyProbe(Probe):
             n,
             confidence=self.confidence,
             method_note=method_note,
+            direction=HIGHER_IS_BETTER,
         )
         decision = decide(
             agreement,

@@ -51,6 +51,9 @@ from typing import Any, ClassVar, Dict, List, Optional, Sequence, Type
 
 from adapters.base import AdapterError, ModelAdapter
 from core.evidence import (
+    DIRECTION_HIGHER_IS_BETTER,
+    DIRECTION_LOWER_IS_BETTER,
+    DIRECTION_NEUTRAL,
     OUTCOME_ERROR,
     OUTCOME_FAIL,
     OUTCOME_INCONCLUSIVE,
@@ -61,10 +64,10 @@ from core.evidence import (
     utc_now_iso,
 )
 
-#: For rates where a smaller number is better (leak rate, unsupported claims).
-LOWER_IS_BETTER = "lower_is_better"
-#: For rates where a larger number is better (agreement, expected-answer rate).
-HIGHER_IS_BETTER = "higher_is_better"
+#: Re-exported from ``core.evidence``, where they live so that a Measurement
+#: can carry its own direction for drift and reporting to read.
+LOWER_IS_BETTER = DIRECTION_LOWER_IS_BETTER
+HIGHER_IS_BETTER = DIRECTION_HIGHER_IS_BETTER
 DIRECTIONS = frozenset({LOWER_IS_BETTER, HIGHER_IS_BETTER})
 
 RULE_INTERVAL = "interval"
@@ -129,6 +132,17 @@ def decide(
     if measurement.ci_low is None or measurement.ci_high is None:
         raise ValueError(
             f"measurement {measurement.name!r} has no interval to decide against"
+        )
+    # A measurement that says one thing and a decision made on the opposite
+    # assumption would invert the conclusion silently. Catch it here.
+    if (
+        measurement.direction != DIRECTION_NEUTRAL
+        and measurement.direction != direction
+    ):
+        raise ValueError(
+            f"measurement {measurement.name!r} declares direction "
+            f"{measurement.direction!r} but the decision was requested with "
+            f"{direction!r}"
         )
 
     n = measurement.n

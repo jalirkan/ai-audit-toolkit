@@ -384,6 +384,7 @@ class CitationFaithfulnessProbe(Probe):
                 "do not account for. The answer is the independent sampling "
                 "unit, so this is the rate the conclusion is drawn on."
             ),
+            direction=LOWER_IS_BETTER,
         )
         claim_rate = Measurement.proportion(
             METRIC_CLAIM_RATE,
@@ -396,6 +397,7 @@ class CitationFaithfulnessProbe(Probe):
                 "is narrower than the evidence strictly supports; it is "
                 "reported for detail, not decided on."
             ),
+            direction=LOWER_IS_BETTER,
         )
         claims_measure = Measurement.count(
             "claims_screened",

@@ -41,6 +41,19 @@ MEASUREMENT_KINDS = frozenset({KIND_PROPORTION, KIND_MEAN, KIND_COUNT})
 #: reported without an interval.
 KINDS_REQUIRING_INTERVAL = frozenset({KIND_PROPORTION, KIND_MEAN})
 
+# --- metric direction --------------------------------------------------------
+#: Which way is good. Recorded on the measurement rather than known only to the
+#: probe that produced it, because every downstream consumer needs it: drift
+#: cannot tell a regression from an improvement without it, and a report cannot
+#: phrase a finding without it.
+DIRECTION_LOWER_IS_BETTER = "lower_is_better"
+DIRECTION_HIGHER_IS_BETTER = "higher_is_better"
+#: For quantities that are neither good nor bad, such as a raw tally.
+DIRECTION_NEUTRAL = "neutral"
+DIRECTIONS = frozenset(
+    {DIRECTION_LOWER_IS_BETTER, DIRECTION_HIGHER_IS_BETTER, DIRECTION_NEUTRAL}
+)
+
 # --- interval methods --------------------------------------------------------
 CI_WILSON = "wilson"
 CI_BOOTSTRAP = "bootstrap-percentile"
@@ -68,6 +81,10 @@ __all__ = [
     "KIND_MEAN",
     "KIND_COUNT",
     "MEASUREMENT_KINDS",
+    "DIRECTION_LOWER_IS_BETTER",
+    "DIRECTION_HIGHER_IS_BETTER",
+    "DIRECTION_NEUTRAL",
+    "DIRECTIONS",
     "CI_WILSON",
     "CI_BOOTSTRAP",
     "CI_NONE",
@@ -126,6 +143,8 @@ class Measurement:
     successes: Optional[int] = None
     #: Free-text note on how the number was arrived at (the scoring rule).
     method_note: str = ""
+    #: Which way is good. See the DIRECTION_* constants.
+    direction: str = DIRECTION_NEUTRAL
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -134,6 +153,11 @@ class Measurement:
             raise ValueError(
                 f"unknown measurement kind {self.kind!r}; "
                 f"expected one of {sorted(MEASUREMENT_KINDS)}"
+            )
+        if self.direction not in DIRECTIONS:
+            raise ValueError(
+                f"unknown direction {self.direction!r}; "
+                f"expected one of {sorted(DIRECTIONS)}"
             )
         if self.n < 0:
             raise ValueError(f"n must be non-negative, got {self.n!r}")
@@ -206,6 +230,7 @@ class Measurement:
         *,
         confidence: float = DEFAULT_CONFIDENCE,
         method_note: str = "",
+        direction: str = DIRECTION_NEUTRAL,
     ) -> "Measurement":
         """A rate with its Wilson interval attached.
 
@@ -226,10 +251,19 @@ class Measurement:
             confidence=confidence,
             successes=successes,
             method_note=method_note,
+            direction=direction,
         )
 
     @classmethod
-    def count(cls, name: str, value: int, n: int, *, method_note: str = "") -> "Measurement":
+    def count(
+        cls,
+        name: str,
+        value: int,
+        n: int,
+        *,
+        method_note: str = "",
+        direction: str = DIRECTION_NEUTRAL,
+    ) -> "Measurement":
         """A raw count out of a population -- e.g. exceptions noted."""
         return cls(
             name=name,
@@ -237,6 +271,7 @@ class Measurement:
             value=float(value),
             n=n,
             method_note=method_note,
+            direction=direction,
         )
 
     # -- properties -----------------------------------------------------------
@@ -305,6 +340,7 @@ class Measurement:
             "confidence": self.confidence,
             "successes": self.successes,
             "method_note": self.method_note,
+            "direction": self.direction,
         }
 
     @classmethod
@@ -320,6 +356,7 @@ class Measurement:
             confidence=data.get("confidence"),
             successes=data.get("successes"),
             method_note=data.get("method_note", ""),
+            direction=data.get("direction", DIRECTION_NEUTRAL),
         )
 
 

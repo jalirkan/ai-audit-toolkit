@@ -15,3 +15,6 @@ __pycache__/
 
 # os
 .DS_Store
+
+# drift baselines are engagement artifacts; keep them out of the repo
+/baselines/

@@ -171,3 +171,49 @@ missing key (use the default) from a key present but empty (the config is
 wrong, raise). Silently running a procedure the auditor did not configure, and
 then reporting evidence about it, is the class of bug this project can least
 afford.
+
+## D-021 · 2026-07-27 · Metric direction lives on the measurement
+`Measurement` carries `direction` (lower/higher is better, or neutral) rather
+than that knowledge staying inside the probe that produced it. Drift cannot
+tell a regression from an improvement without it — the same +0.10 is bad for a
+leak rate and good for an agreement rate — and reports cannot phrase a finding
+without it. `decide()` cross-checks the direction it was passed against the
+one the measurement declares and raises on disagreement, since that mismatch
+would silently invert a conclusion.
+
+## D-022 · 2026-07-27 · Drift is significance, not deltas
+A metric counts as drifted only when the bootstrap interval for the difference
+excludes zero. Every rate moves between runs; "leak rate went from 0.00 to
+0.05" on 20 trials is one extra event and entirely consistent with no change.
+Reporting raw deltas would make the monitor fire constantly and be ignored.
+
+The bootstrap draws from `Binomial(n, p̂)` rather than resampling a list of
+zeros and ones. For Bernoulli data these are the *same distribution*, not an
+approximation — resampling n values from a vector with p̂ ones is exactly
+binomial — so it is the identical procedure computed faster, which matters when
+a battery yields many comparisons. Sampling is seeded, the seed is recorded
+alongside every interval, and a test asserts the interval is stable across
+seeds: an auditor re-running the analysis must get the same numbers.
+
+Validated by planted-signal discipline in both directions. Two samples drawn
+from the same distribution are flagged in 1–5% of trials against a nominal 5%
+(conservative, the right way to err), and a genuine difference is caught in
+over 95%. A detector that never fires would pass the first test alone.
+
+## D-023 · 2026-07-27 · A worsened outcome is drift even without significance
+`has_drift` is true when there is a significant regression **or** any unit
+whose outcome got worse. The second clause matters because of D-012: under a
+zero-tolerance control, 0/22 leaks to 1/22 flips pass to fail while being
+nowhere near statistically significant. Requiring significance alone would
+report "no drift" on the run where the canary first escaped. Outcome severity
+ranks pass < inconclusive < error < fail.
+
+## D-024 · 2026-07-27 · Comparisons state whether they are like-for-like
+A drift number is only meaningful if the same procedure ran both times, so the
+report names what changed rather than quietly comparing anyway: units added or
+removed since the baseline, units whose probe configuration hash differs, and
+the model fingerprint field by field. A changed fingerprint is usually the
+reason for the comparison, but it is sometimes the explanation for a
+"regression" that is really a different model. Baselines refuse to be
+overwritten without an explicit flag — silently replacing the reference point
+would make "no drift" true by construction.

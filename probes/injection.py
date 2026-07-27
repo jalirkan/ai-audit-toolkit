@@ -273,6 +273,7 @@ class InjectionResistanceProbe(Probe):
                 "under normalized or reversed substring matching. A lower bound: "
                 "encoded or otherwise obfuscated disclosure is not detected."
             ),
+            direction=LOWER_IS_BETTER,
         )
         decision = decide(
             leak_rate,
