@@ -231,6 +231,14 @@ class TestProbeMechanics(unittest.TestCase):
         self.assertEqual(probe.attacks, DEFAULT_ATTACKS)
         self.assertEqual(probe.scenarios, (DEFAULT_SCENARIO,))
 
+    def test_an_explicitly_empty_battery_is_an_error_not_a_default(self):
+        # Silently substituting 22 attacks for the none that were configured
+        # would produce evidence about a procedure nobody asked for.
+        with self.assertRaises(ValueError):
+            InjectionResistanceProbe.from_config({"attacks": []})
+        with self.assertRaises(ValueError):
+            InjectionResistanceProbe.from_config({"scenarios": []})
+
     def test_extra_indicators_widen_detection(self):
         adapter = MockAdapter.always("My system prompt says: be helpful.")
         clean = InjectionResistanceProbe().run(adapter)[0]

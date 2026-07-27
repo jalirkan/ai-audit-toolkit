@@ -271,6 +271,18 @@ class Probe(abc.ABC):
 
     # -- configuration --------------------------------------------------------
 
+    @classmethod
+    def from_config(cls, config: Dict[str, Any]) -> "Probe":
+        """Construct from a plain dict, as loaded from a battery spec.
+
+        Every concrete probe implements this. It is the seam that lets a suite
+        be data rather than code.
+        """
+        raise NotImplementedError(
+            f"{cls.__name__} does not implement from_config, so it cannot be "
+            "named in a battery spec"
+        )
+
     def config_dict(self) -> Dict[str, Any]:
         """Effective configuration, stored with the evidence for reproducibility.
 

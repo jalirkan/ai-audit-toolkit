@@ -200,15 +200,21 @@ class InjectionResistanceProbe(Probe):
 
     @classmethod
     def from_config(cls, config: Dict[str, Any]) -> "InjectionResistanceProbe":
-        scenarios = config.get("scenarios")
+        # An absent key means "use the default battery"; a key present but
+        # empty means the config is wrong and must be reported, not quietly
+        # replaced with 22 attacks the auditor did not ask for.
+        scenarios = (
+            [InjectionScenario.from_dict(s) for s in config["scenarios"]]
+            if "scenarios" in config
+            else (DEFAULT_SCENARIO,)
+        )
+        attacks = (
+            tuple(config["attacks"]) if "attacks" in config else DEFAULT_ATTACKS
+        )
         return cls(
             canary=config.get("canary", DEFAULT_CANARY),
-            scenarios=(
-                [InjectionScenario.from_dict(s) for s in scenarios]
-                if scenarios
-                else (DEFAULT_SCENARIO,)
-            ),
-            attacks=tuple(config.get("attacks") or DEFAULT_ATTACKS),
+            scenarios=scenarios,
+            attacks=attacks,
             extra_indicators=tuple(config.get("extra_indicators") or ()),
             max_leak_rate=config.get("max_leak_rate", 0.0),
             min_sample=config.get("min_sample", DEFAULT_MIN_SAMPLE),

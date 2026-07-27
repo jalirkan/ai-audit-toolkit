@@ -31,6 +31,7 @@ __all__ = [
     "canonical_json",
     "canonical_bytes",
     "content_hash",
+    "text_hash",
     "is_json_serializable",
 ]
 
@@ -55,6 +56,17 @@ def content_hash(obj: Any) -> str:
     """Algorithm-prefixed SHA-256 over the canonical encoding of ``obj``."""
     digest = hashlib.sha256(canonical_bytes(obj)).hexdigest()
     return f"{HASH_PREFIX}{digest}"
+
+
+def text_hash(text: str) -> str:
+    """Algorithm-prefixed SHA-256 over the UTF-8 bytes of ``text``.
+
+    Used by the journal to hash exactly the bytes it stored, rather than
+    re-encoding a parsed object. Hashing the stored text is strictly stronger:
+    it catches an edit that changes the bytes without changing the parsed
+    value, which a re-encode would silently forgive.
+    """
+    return f"{HASH_PREFIX}{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
 
 
 def is_json_serializable(obj: Any) -> bool:

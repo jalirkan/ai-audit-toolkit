@@ -124,3 +124,50 @@ used there), and the injection leak rate is a **lower bound**, since encoded or
 acrostic exfiltration succeeds without being counted. Attacks of exactly those
 kinds are in the default battery anyway, because a model that complies with
 them usually also leaks in plainer ways.
+
+## D-016 · 2026-07-27 · No composite score; battery outcome by precedence
+A battery does not average its probes into an assurance score. A leak rate and
+a paraphrase agreement rate measure different things on different populations
+and their mean is not a quantity — and averaging hides the case a reader most
+needs to see, one control failing badly among several passing. The rollup is a
+distribution (counts by outcome) plus a single outcome chosen by precedence:
+**fail > error > inconclusive > pass**. A detected deficiency leads because it
+is the most actionable; an incomplete procedure outranks a completed one that
+could not conclude. A battery is clean only when every probe concluded and
+passed. A test asserts no `score`/`composite`/`average` attribute ever appears.
+
+## D-017 · 2026-07-27 · The chain detects edits, not rewrites — anchor the head
+The hash chain catches any edit, deletion, reordering, or insertion within a
+journal. It cannot catch a **full rebuild**: anyone who can write the database
+file can regenerate every row and hash into a chain that verifies perfectly.
+The answer is anchoring — `Journal.head()` returns the value to record
+somewhere the file's owner does not control, and `verify(expected_head=...)`
+checks against it. A test asserts that a rebuilt journal verifies clean and is
+caught only by the anchor, so the limitation stays documented in executable
+form rather than drifting into an overclaim. Append-only SQLite triggers block
+UPDATE and DELETE as a first line of defence; the tests drop them to simulate
+an attacker with file access, which is the only honest way to test the chain.
+
+## D-018 · 2026-07-27 · The run record is a manifest, not a copy
+Journaling a run writes each evidence record as its own entry, then a run entry
+listing their content hashes. The manifest binds specific evidence to a
+specific run without duplicating it, so a substituted record fails to match,
+and an interrupted run still leaves a trail of what completed. Evidence is
+appended as it is produced, before the manifest.
+
+## D-019 · 2026-07-27 · Suites are JSON data files
+A battery is a JSON file naming probes and their configuration, so the suite an
+engagement ran can be attached to the workpapers, diffed against last
+quarter's, and re-run verbatim. JSON rather than YAML because YAML is a
+dependency and D-001 makes dependencies earn their place; the loss is comments,
+which `description` fields cover. Probe ids are resolved against the registry at
+load time so a typo fails immediately with the list of valid ids, not half-way
+through a run.
+
+## D-020 · 2026-07-27 · An absent key and an empty one mean different things
+Found while testing: `{"attacks": []}` was falling back to the 22 default
+attacks because the code tested truthiness. Config handling now distinguishes a
+missing key (use the default) from a key present but empty (the config is
+wrong, raise). Silently running a procedure the auditor did not configure, and
+then reporting evidence about it, is the class of bug this project can least
+afford.
