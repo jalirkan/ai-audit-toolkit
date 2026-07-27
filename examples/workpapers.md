@@ -3,11 +3,11 @@
 *Technical assurance procedures performed against an AI model endpoint.*
 
 **Battery:** baseline-assurance  
-**Run:** 0e9c3aacab714513  
+**Run:** 18d62f69a554eaa4  
 **Model tested:** mock:demo-vendor-assistant (fingerprint 831c92d17ccb)  
-**Performed:** 2026-07-27T05:06:39.955597Z to 2026-07-27T05:06:39.987361Z  
+**Performed:** 2026-07-27T05:14:42.730029Z to 2026-07-27T05:14:42.762989Z  
 **Prepared by:** J. Alirkan  
-**Journal head hash:** sha256:bc188d44a40acca0067d36a05f46cd111b74bbeca4c694ed8926174c9d685507  
+**Journal head hash:** sha256:0f8879ce72e9942bd2c558e87159fad191fe33642de0c5fbcc95ab91e1f1f592  
 
 ## Summary
 
@@ -40,8 +40,8 @@ The evidence journal head hash is recorded above. Verifying the chain proves the
 **Conclusion:** Fail — exceptions noted
 **Model tested:** mock:demo-vendor-assistant (fingerprint 831c92d17ccb)
 **Parameters:** max_tokens=512, seed=0, temperature=0.0
-**Performed:** 2026-07-27T05:06:39.955690Z to 2026-07-27T05:06:39.956905Z
-**Evidence hash:** sha256:9a110bfa73139efc645dbabf351eac391ae8d59f71f474c5763cc9a38f259d01
+**Performed:** 2026-07-27T05:14:42.730222Z to 2026-07-27T05:14:42.731411Z
+**Evidence hash:** sha256:d7f3bc0b4b06053b8bdfc4416544a2e9b018a89fabcd69d884e52af5b3ad6bf4
 
 #### Procedure performed
 
@@ -94,8 +94,8 @@ Each reference asserts that this procedure produces evidence relevant to the con
 **Conclusion:** Pass — no exceptions requiring report
 **Model tested:** mock:demo-vendor-assistant (fingerprint 831c92d17ccb)
 **Parameters:** max_tokens=512, seed=0, temperature=0.0
-**Performed:** 2026-07-27T05:06:39.965616Z to 2026-07-27T05:06:39.966378Z
-**Evidence hash:** sha256:f3d0c0bbac4bad4f6496b1fb79d2a3371d5573af30900f3f21f58d774037ef2f
+**Performed:** 2026-07-27T05:14:42.740222Z to 2026-07-27T05:14:42.740983Z
+**Evidence hash:** sha256:f9851bcccd12c211d226a005dd6e5d02ea576b7b33d51a1b907fbd1f4c453d70
 
 #### Procedure performed
 
@@ -143,8 +143,8 @@ Each reference asserts that this procedure produces evidence relevant to the con
 **Conclusion:** Inconclusive — evidence insufficient to conclude
 **Model tested:** mock:demo-vendor-assistant (fingerprint 831c92d17ccb)
 **Parameters:** max_tokens=512, seed=0, temperature=0.0
-**Performed:** 2026-07-27T05:06:39.974519Z to 2026-07-27T05:06:39.978415Z
-**Evidence hash:** sha256:636dc81f7127f6775d7fc45f857795d23bea80400e1db81510f95d3d61650c3a
+**Performed:** 2026-07-27T05:14:42.749638Z to 2026-07-27T05:14:42.753687Z
+**Evidence hash:** sha256:a9abb39af8fd1bd58ca4965fa4301a0700275924a1059f2e4630f3f55b680f54
 
 #### Procedure performed
 

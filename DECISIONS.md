@@ -330,3 +330,31 @@ inconclusive result, because a sample run that is all green teaches nothing
 about how the tool behaves when it is not. `examples/generate.py` loads the same
 fixture rather than rebuilding it, so the README and the committed artifacts
 cannot diverge, and a test asserts the exact figures the README prints.
+
+## D-035 · 2026-07-27 · Bootstrap intervals are widened to the analytic bound
+*Amends D-022, which described the plain percentile bootstrap.*
+
+Found during the final verification sweep, by cross-checking the bootstrap
+against Newcombe's hybrid-score interval across 749 (successes, n) pairs: the
+plain percentile bootstrap claimed significance where the analytic method would
+not in 12 cases, and **every one involved an arm at 0 or n**.
+
+The cause is structural. Resampling an all-zero sample can only produce zeros,
+so a boundary arm contributes no variance and the interval for the difference
+comes out too narrow. A clean baseline — zero exceptions — is exactly what an
+auditor's reference run looks like, so the pathology sat on this toolkit's most
+common comparison. Two clean runs of 22 were reporting a difference interval of
+[0, 0]: certainty that the rates match, from 22 observations each.
+
+The reported interval is now the percentile bootstrap widened to the Newcombe
+interval wherever Newcombe is wider. One sentence to state, errs conservative,
+and keeps the bootstrap, which is what generalises to non-proportion metrics
+later. `BootstrapInterval.widened` records when it applied and the rendered
+interval says so. Re-validated afterwards: zero anti-conservative cases across
+the same grid, the false-positive rate still sits under the confidence level,
+and decisive differences are still detected — conservatism is only acceptable
+if it does not blind the detector.
+
+The lesson worth keeping: the failure appeared in about 2% of pairs and only at
+the boundaries. Spot-checking a handful of cases would have missed it. The grid
+comparison against an independent method is now a test.

@@ -14,7 +14,7 @@ workpapers.
 
 ## Quick start
 
-No install step, no dependencies, no API key. Python 3.10 or later.
+No install step, no dependencies, no API key. Developed and tested on Python 3.10.
 
 ```bash
 python cli.py run suites/baseline.json --mock-script suites/demo-endpoint.json --report
@@ -140,7 +140,7 @@ report/      one document model, rendered to Markdown and standalone HTML
 suites/      battery specs
 examples/    a generated end-to-end run
 cli.py
-tests/       553 tests, all offline
+tests/       unit tests; the whole suite runs offline with no key
 ```
 
 ## Tests

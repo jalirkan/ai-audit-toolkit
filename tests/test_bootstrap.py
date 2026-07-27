@@ -20,6 +20,7 @@ from drift.bootstrap import (
     binomial_cdf,
     binomial_pmf,
     bootstrap_proportion_difference,
+    newcombe_difference,
 )
 
 bpd = bootstrap_proportion_difference
@@ -84,10 +85,26 @@ class TestBootstrapDifference(unittest.TestCase):
         # monitor useless. The outcome change is what catches this case.
         self.assertFalse(bpd(0, 22, 1, 22).excludes_zero)
 
-    def test_two_clean_runs_produce_a_degenerate_interval(self):
+    def test_two_clean_runs_do_not_prove_the_rates_are_identical(self):
+        # Resampling two all-zero samples can only produce zeros, so the raw
+        # bootstrap would report [0, 0] here -- an interval claiming certainty
+        # that the two rates match, from 22 observations each. The widening to
+        # the analytic bound is what stops that.
         interval = bpd(0, 22, 0, 22)
-        self.assertEqual((interval.low, interval.high), (0.0, 0.0))
+        self.assertTrue(interval.widened)
+        self.assertLess(interval.low, 0.0)
+        self.assertGreater(interval.high, 0.0)
         self.assertFalse(interval.excludes_zero)
+
+    def test_a_boundary_arm_is_widened_to_the_analytic_bound(self):
+        interval = bpd(0, 40, 3, 40)
+        analytic_low, analytic_high = newcombe_difference(0, 40, 3, 40)
+        self.assertTrue(interval.widened)
+        self.assertLessEqual(interval.low, analytic_low + 1e-12)
+        self.assertGreaterEqual(interval.high, analytic_high - 1e-12)
+
+    def test_render_says_when_the_analytic_bound_was_used(self):
+        self.assertIn("widened", bpd(0, 22, 0, 22).render())
 
     def test_is_deterministic_for_a_given_seed(self):
         a, b = bpd(3, 30, 9, 30, seed=7), bpd(3, 30, 9, 30, seed=7)
@@ -108,9 +125,12 @@ class TestBootstrapDifference(unittest.TestCase):
 
     def test_seeds_really_do_drive_different_draws(self):
         # Guards against a seed that is accepted and then ignored, which would
-        # make the determinism test above vacuous. With n=400 the support is
-        # fine enough that different draws show up in the bounds.
-        a, b = bpd(40, 400, 90, 400, seed=1), bpd(40, 400, 90, 400, seed=2)
+        # make the determinism test above vacuous. Uses a case away from the
+        # boundary, where the bootstrap bounds are the ones reported rather
+        # than the analytic widening -- which is seed-independent by nature.
+        a = bpd(120, 400, 200, 400, seed=1)
+        b = bpd(120, 400, 200, 400, seed=2)
+        self.assertFalse(a.widened)
         self.assertNotEqual((a.low, a.high), (b.low, b.high))
 
     def test_reversing_the_arguments_negates_the_estimate(self):
@@ -182,6 +202,45 @@ class TestStatisticalBehaviour(unittest.TestCase):
                     0.10,
                     f"flagged {rate:.1%} of no-change comparisons at p={p}, n={n}",
                 )
+
+    def test_is_never_narrower_than_the_analytic_interval(self):
+        # The invariant the widening exists to guarantee. Checked across a grid
+        # rather than a handful of cases, because the failure it prevents --
+        # claiming drift a boundary sample cannot support -- showed up only at
+        # the boundaries and only in about 2% of pairs.
+        for n in (10, 20, 22, 40, 60):
+            for successes_before in range(0, n + 1, max(1, n // 5)):
+                for successes_after in range(0, n + 1, max(1, n // 5)):
+                    with self.subTest(before=successes_before, after=successes_after, n=n):
+                        ours = bpd(successes_before, n, successes_after, n, resamples=2000)
+                        low, high = newcombe_difference(
+                            successes_before, n, successes_after, n
+                        )
+                        self.assertLessEqual(ours.low, low + 1e-12)
+                        self.assertGreaterEqual(ours.high, high - 1e-12)
+
+    def test_never_claims_significance_the_analytic_method_denies(self):
+        # Before widening, the plain percentile bootstrap did this in 12 of 749
+        # pairs, every one of them with an arm at 0 or n -- which is what a
+        # clean baseline looks like, and therefore the most common comparison
+        # this toolkit performs.
+        offenders = []
+        for n in (10, 20, 22, 40, 60):
+            for successes_before in range(0, n + 1, max(1, n // 5)):
+                for successes_after in range(0, n + 1, max(1, n // 5)):
+                    ours = bpd(successes_before, n, successes_after, n, resamples=2000)
+                    low, high = newcombe_difference(
+                        successes_before, n, successes_after, n
+                    )
+                    if ours.excludes_zero and not (low > 0 or high < 0):
+                        offenders.append((successes_before, successes_after, n))
+        self.assertEqual(offenders, [], f"anti-conservative cases: {offenders[:5]}")
+
+    def test_a_decisive_difference_survives_the_widening(self):
+        # Conservatism is only acceptable if it does not blind the detector.
+        self.assertTrue(bpd(0, 40, 20, 40).excludes_zero)
+        self.assertTrue(bpd(2, 60, 30, 60).excludes_zero)
+        self.assertTrue(bpd(50, 200, 100, 200).excludes_zero)
 
     def test_a_real_difference_is_detected_most_of_the_time(self):
         # Same harness, but the second sample really does come from a worse

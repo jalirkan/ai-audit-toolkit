@@ -15,6 +15,28 @@ Sampling uses an inverse-CDF lookup over a probability table built with
 log-gamma, so it stays accurate at the boundaries where probe results actually
 live (p-hat of 0 or 1) and does not underflow.
 
+## The boundary problem, and what is done about it
+
+There is a known pathology, and it lands squarely on this toolkit's most common
+case. When an arm is at the boundary -- zero exceptions in the baseline, which
+is what a clean reference run looks like -- resampling can only ever produce
+zeros. That arm contributes no variance, and the interval for the difference
+comes out too narrow.
+
+Measured across 749 (successes, n) pairs against Newcombe's hybrid-score
+interval, the plain percentile bootstrap claimed significance where the
+analytic method would not in 12 cases, and **every one of them involved a
+boundary arm**. Declaring drift on a clean-baseline comparison that the
+standard method calls borderline is exactly the overclaim this project exists
+to avoid.
+
+So the reported interval is the percentile bootstrap **widened to the Newcombe
+hybrid-score interval wherever Newcombe is wider**. The rule is one sentence,
+it errs conservative -- the right direction for assurance -- and it removes the
+pathology without abandoning the bootstrap, which is what generalises to
+non-proportion metrics later. ``BootstrapInterval.widened`` records when it
+applied, so the workpaper can say which bound is doing the work.
+
 ## Seeded, always
 
 Every interval here is reproducible from its seed, and the seed is recorded in
@@ -28,8 +50,10 @@ from __future__ import annotations
 import random
 from bisect import bisect_left
 from dataclasses import dataclass
-from math import exp, lgamma, log
+from math import exp, lgamma, log, sqrt
 from typing import List, Sequence, Tuple
+
+from core.stats import wilson_interval
 
 #: Enough resamples that the percentile bounds are stable to about three
 #: decimal places, which is finer than any rate this toolkit reports.
@@ -59,6 +83,9 @@ class BootstrapInterval:
     confidence: float
     resamples: int
     seed: int
+    #: True when the Newcombe bound was wider and was used instead. Almost
+    #: always means an arm sat at 0 or n.
+    widened: bool = False
 
     @property
     def excludes_zero(self) -> bool:
@@ -70,12 +97,37 @@ class BootstrapInterval:
         return self.low > 0.0 or self.high < 0.0
 
     def render(self) -> str:
+        note = ", widened to the analytic bound" if self.widened else ""
         return (
             f"{self.point:+.3f} "
             f"({int(round(self.confidence * 100))}% CI "
             f"[{self.low:+.3f}, {self.high:+.3f}], "
-            f"{self.resamples} resamples, seed {self.seed})"
+            f"{self.resamples} resamples, seed {self.seed}{note})"
         )
+
+
+def newcombe_difference(
+    baseline_successes: int,
+    baseline_n: int,
+    current_successes: int,
+    current_n: int,
+    confidence: float = 0.95,
+) -> Tuple[float, float]:
+    """Newcombe's hybrid-score interval for ``current_rate - baseline_rate``.
+
+    Built from the two Wilson intervals, so it behaves sensibly at the
+    boundaries where the bootstrap does not. Used here to widen the bootstrap
+    rather than to replace it.
+    """
+    low1, high1 = wilson_interval(baseline_successes, baseline_n, confidence)
+    low2, high2 = wilson_interval(current_successes, current_n, confidence)
+    p1 = baseline_successes / baseline_n
+    p2 = current_successes / current_n
+    difference = p2 - p1
+    return (
+        difference - sqrt((p2 - low2) ** 2 + (high1 - p1) ** 2),
+        difference + sqrt((high2 - p2) ** 2 + (p1 - low1) ** 2),
+    )
 
 
 def binomial_pmf(n: int, p: float) -> List[float]:
@@ -184,12 +236,23 @@ def bootstrap_proportion_difference(
     alpha = 1.0 - confidence
     low_index = int(alpha / 2.0 * resamples)
     high_index = min(int((1.0 - alpha / 2.0) * resamples), resamples - 1)
+    low, high = differences[low_index], differences[high_index]
+
+    # Widen to the analytic bound where it is wider. See the module docstring:
+    # a boundary arm gives the bootstrap no variance to work with, and a
+    # too-narrow interval there would manufacture drift findings on exactly the
+    # clean-baseline comparison this toolkit runs most often.
+    analytic_low, analytic_high = newcombe_difference(
+        baseline_successes, baseline_n, current_successes, current_n, confidence
+    )
+    widened = analytic_low < low or analytic_high > high
 
     return BootstrapInterval(
         point=current_p - baseline_p,
-        low=differences[low_index],
-        high=differences[high_index],
+        low=min(low, analytic_low),
+        high=max(high, analytic_high),
         confidence=confidence,
         resamples=resamples,
         seed=seed,
+        widened=widened,
     )

@@ -1,15 +1,15 @@
 $ python cli.py journal show --limit 4
 
-    1  2026-07-27T05:06:39.957233Z  evidence  injection-resistance [fail]
-    2  2026-07-27T05:06:39.966650Z  evidence  output-consistency [pass]
-    3  2026-07-27T05:06:39.978848Z  evidence  citation-faithfulness [inconclusive]
-    4  2026-07-27T05:06:39.988342Z  run       baseline-assurance run 0e9c3aacab714513
+    1  2026-07-27T05:14:42.731688Z  evidence  injection-resistance [fail]
+    2  2026-07-27T05:14:42.741286Z  evidence  output-consistency [pass]
+    3  2026-07-27T05:14:42.754107Z  evidence  citation-faithfulness [inconclusive]
+    4  2026-07-27T05:14:42.763926Z  run       baseline-assurance run 18d62f69a554eaa4
 
-Head: sha256:bc188d44a40acca0067d36a05f46cd111b74bbeca4c694ed8926174c9d685507
+Head: sha256:0f8879ce72e9942bd2c558e87159fad191fe33642de0c5fbcc95ab91e1f1f592
 
 $ python cli.py journal verify
 
-Chain intact across 4 entries. Head bc188d44a40a.
+Chain intact across 4 entries. Head 0f8879ce72e9.
 
 Note: this confirms the chain is internally consistent. It does not
 rule out a wholesale rebuild. Re-run with --expect-head <hash>

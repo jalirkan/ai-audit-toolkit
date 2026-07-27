@@ -42,7 +42,7 @@ A monitor that required statistical significance would have said "no drift" on t
 where the canary first escaped.
 
 **The inconclusive result is the interesting one.** Two unsupported answers out of twenty
-is a rate of 0.100, with a 95% interval of [0.028, 0.301] against a tolerance of 0.200.
+is a rate of 0.100, with a 95% CI of [0.028, 0.301] against a tolerance of 0.200.
 The point estimate is inside tolerance; the interval is not. Reporting that as a pass
 would claim more than twenty questions can support.
 

@@ -59,6 +59,51 @@ class TestWilsonInterval(unittest.TestCase):
     def test_no_sample_means_total_ignorance(self):
         self.assertEqual(wilson_interval(0, 0), (0.0, 1.0))
 
+    def test_zero_success_upper_bound_matches_its_closed_form(self):
+        # With p-hat = 0 the Wilson centre and margin are both
+        # z^2 / (2(n + z^2)), so the upper bound collapses to z^2 / (n + z^2).
+        # Checking against the algebra rather than a remembered table: a
+        # reference value copied wrongly would otherwise look like a bug in the
+        # implementation, or worse, hide one.
+        z2 = z_for_confidence(0.95) ** 2
+        for n in (5, 10, 22, 40, 200, 1000):
+            with self.subTest(n=n):
+                self.assertAlmostEqual(
+                    wilson_interval(0, n)[1], z2 / (n + z2), places=12
+                )
+
+    def test_all_success_lower_bound_is_the_mirror_image(self):
+        z2 = z_for_confidence(0.95) ** 2
+        for n in (5, 10, 22, 40, 200):
+            with self.subTest(n=n):
+                self.assertAlmostEqual(
+                    wilson_interval(n, n)[0], n / (n + z2), places=12
+                )
+
+    def test_matches_an_independent_derivation_across_the_whole_range(self):
+        # Solving |p-hat - p| = z * sqrt(p(1-p)/n) as a quadratic in p gives the
+        # same interval by a different route. Agreement to floating-point noise
+        # across every (successes, n) pair rules out an algebra slip in the
+        # rearranged form the implementation uses.
+        from math import sqrt
+
+        def by_quadratic(successes, n, confidence=0.95):
+            z = z_for_confidence(confidence)
+            p = successes / n
+            a = 1 + z * z / n
+            b = -(2 * p + z * z / n)
+            c = p * p
+            root = sqrt(b * b - 4 * a * c)
+            return ((-b - root) / (2 * a), (-b + root) / (2 * a))
+
+        for n in (5, 10, 22, 25, 40, 200):
+            for successes in range(n + 1):
+                with self.subTest(successes=successes, n=n):
+                    ours = wilson_interval(successes, n)
+                    theirs = by_quadratic(successes, n)
+                    self.assertAlmostEqual(ours[0], theirs[0], places=10)
+                    self.assertAlmostEqual(ours[1], theirs[1], places=10)
+
     def test_interval_always_brackets_the_point_estimate(self):
         for n in (1, 5, 20, 100, 997):
             for successes in {0, 1, n // 3, n // 2, n - 1, n}:
