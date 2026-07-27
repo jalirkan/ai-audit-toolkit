@@ -295,3 +295,38 @@ worse; Medium otherwise. The rule is printed in the letter, because a severity
 the reader cannot reconstruct is one they cannot challenge. Remediation text
 lives on the probe class, next to the procedure that understands what its own
 failure means.
+
+## D-033 · 2026-07-27 · Real adapters are opt-in, with no fallback either way
+`build_adapter` raises when a real adapter is named without its key in the
+environment, rather than quietly using the mock. A silent downgrade would
+produce evidence labelled with an endpoint it never reached, which is the one
+failure mode that would make the whole journal untrustworthy. The mock is the
+default everywhere including the CLI, and a test asserts it.
+
+Real adapters use `urllib` — one POST with JSON in and JSON out does not earn a
+dependency. Every request goes through an injectable `Transport`, which is what
+lets the suite exercise request construction, parsing, errors, and retries with
+no network and no key. Bounded retries on transient statuses only, with an
+injectable sleep, so one 429 partway through a 22-call battery does not turn a
+whole procedure into error evidence.
+
+The API key is never rendered: not in the fingerprint, `describe()`, `repr`,
+the recorded `raw` payload, or any error message. A test checks each surface,
+plus a positive test that the key does reach the request headers — otherwise
+the negative tests would pass on an adapter that simply never used it. An
+evidence journal that captured a credential would be worse than no journal.
+
+## D-034 · 2026-07-27 · Fixture endpoints are a first-class input
+`--mock-script` loads a scripted endpoint from JSON, and
+`suites/demo-endpoint.json` ships one. This started as a documentation problem:
+the README quick start claimed an all-pass run, but running the default suite
+against the bare mock fails two probes — a hash-echo does not know a fictional
+shipping policy. Those failures are artifacts of the fixture, not findings, and
+a tool selling evidentiary credibility cannot have fabricated red output as its
+front door.
+
+The shipped fixture is scripted to produce a failure, a pass, **and** an
+inconclusive result, because a sample run that is all green teaches nothing
+about how the tool behaves when it is not. `examples/generate.py` loads the same
+fixture rather than rebuilding it, so the README and the committed artifacts
+cannot diverge, and a test asserts the exact figures the README prints.

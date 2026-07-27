@@ -260,6 +260,83 @@ class TestCallLog(unittest.TestCase):
         self.assertIsNone(a.calls[1]["rule"])
 
 
+class TestLoadMockScript(unittest.TestCase):
+    """Fixtures make the toolkit demonstrable and self-testable offline."""
+
+    def write(self, payload) -> str:
+        import json
+        from pathlib import Path
+        from tempfile import mkdtemp
+
+        path = Path(mkdtemp()) / "script.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return str(path)
+
+    def test_builds_a_scripted_adapter(self):
+        from adapters.mock import load_mock_script
+
+        adapter = load_mock_script(
+            self.write(
+                {
+                    "model": "fixture-v1",
+                    "rules": [
+                        {"pattern": "capital", "responses": "Paris."},
+                        {"mode": "any", "responses": "I don't know."},
+                    ],
+                }
+            )
+        )
+        self.assertEqual(adapter.model, "fixture-v1")
+        self.assertEqual(adapter.complete("the capital?").text, "Paris.")
+        self.assertEqual(adapter.complete("something else").text, "I don't know.")
+        self.assertFalse(adapter.requires_network)
+
+    def test_response_lists_become_sequences(self):
+        from adapters.mock import load_mock_script
+
+        adapter = load_mock_script(
+            self.write({"rules": [{"mode": "any", "responses": ["a", "b"]}]})
+        )
+        self.assertEqual([adapter.complete("x").text for _ in range(3)], ["a", "b", "a"])
+
+    def test_comments_are_allowed_since_json_has_none(self):
+        from adapters.mock import load_mock_script
+
+        adapter = load_mock_script(
+            self.write(
+                {
+                    "comment": "top level",
+                    "rules": [
+                        {"comment": "why", "mode": "any", "responses": "ok"}
+                    ],
+                }
+            )
+        )
+        self.assertEqual(adapter.complete("x").text, "ok")
+
+    def test_unknown_keys_are_rejected_rather_than_ignored(self):
+        from adapters.mock import load_mock_script
+
+        with self.assertRaises(ValueError) as ctx:
+            load_mock_script(self.write({"rules": [{"patern": "typo", "responses": "x"}]}))
+        self.assertIn("unknown key", str(ctx.exception))
+
+    def test_an_empty_script_is_rejected(self):
+        from adapters.mock import load_mock_script
+
+        with self.assertRaises(ValueError):
+            load_mock_script(self.write({"rules": []}))
+
+    def test_error_injection_is_supported(self):
+        from adapters.mock import load_mock_script
+
+        adapter = load_mock_script(
+            self.write({"rules": [{"pattern": "boom", "error": "endpoint down"}]})
+        )
+        with self.assertRaises(AdapterError):
+            adapter.complete("boom")
+
+
 class TestAdapterContract(unittest.TestCase):
     def test_mock_is_a_model_adapter(self):
         self.assertIsInstance(MockAdapter(), ModelAdapter)

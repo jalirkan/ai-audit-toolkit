@@ -1,0 +1,34 @@
+$ python cli.py coverage suites/baseline.json --all-capabilities
+
+Framework coverage. A mapping means the procedure produced evidence relevant to the control, never that the control is satisfied.
+EU Artificial Intelligence Act (Regulation (EU) 2024/1689) -- partial catalog, identifiers checked 2026-07-27
+  3 of 6 catalogued controls have evidence from this run
+    [GAP ] Article 9: -
+    [GAP ] Article 10: -
+    [doc ] Article 12: evidence-journal
+    [doc ] Article 13: workpapers
+    [FAIL] Article 15: citation-faithfulness, injection-resistance, output-consistency
+    [GAP ] Article 72: -
+ISO/IEC 42001 AI management system (ISO/IEC 42001:2023, Annex A) -- partial catalog, identifiers checked 2026-07-27
+  3 of 4 catalogued controls have evidence from this run
+    [FAIL] A.6.2.4: citation-faithfulness, injection-resistance, output-consistency
+    [GAP ] A.6.2.6: -
+    [doc ] A.6.2.8: evidence-journal
+    [doc ] A.8.2: workpapers
+NIST AI Risk Management Framework (NIST AI 100-1, AI RMF 1.0) -- partial catalog, identifiers checked 2026-07-27
+  4 of 7 catalogued controls have evidence from this run
+    [ok  ] MEASURE 2.5: output-consistency
+    [GAP ] MEASURE 2.6: -
+    [FAIL] MEASURE 2.7: injection-resistance
+    [doc ] MEASURE 2.8: evidence-journal, workpapers
+    [??  ] MEASURE 2.9: citation-faithfulness
+    [GAP ] MEASURE 2.11: -
+    [GAP ] MANAGE 4.1: -
+  7 catalogued control(s) have no evidence from this run:
+    eu-ai-act Article 9
+    eu-ai-act Article 10
+    eu-ai-act Article 72
+    iso-iec-42001 A.6.2.6
+    nist-ai-rmf MEASURE 2.6
+    nist-ai-rmf MEASURE 2.11
+    nist-ai-rmf MANAGE 4.1

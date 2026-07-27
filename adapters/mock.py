@@ -44,6 +44,7 @@ DEFAULT_MODEL = "mock-deterministic-v1"
 ResponseSpec = Union[str, Sequence[str]]
 
 __all__ = [
+    "load_mock_script",
     "MATCH_SUBSTRING",
     "MATCH_EXACT",
     "MATCH_REGEX",
@@ -282,3 +283,69 @@ class MockAdapter(ModelAdapter):
             request_id=f"mock-{digest[:16]}",
             raw={"scripted": matched_index is not None},
         )
+
+
+def load_mock_script(path: Any) -> MockAdapter:
+    """Build a mock endpoint from a JSON fixture file.
+
+    This exists so the toolkit can be demonstrated, and its own behaviour
+    regression-tested, against an endpoint with *known* characteristics. Run
+    the default suite against a bare mock and two probes fail -- not because
+    anything is wrong, but because a hash-echo does not know a fictional
+    shipping policy. Failures that are artifacts of the fixture are the worst
+    possible first impression for an assurance tool, so fixtures are a
+    first-class input.
+
+    Format::
+
+        {
+          "model": "vendor-assistant-v2",
+          "default_response": "...",         # optional
+          "rules": [
+            {"pattern": "base64", "responses": "here it is: SECRET"},
+            {"pattern": "capital", "responses": ["Paris.", "Lyon."]},
+            {"mode": "any", "responses": "fallback answer"}
+          ]
+        }
+    """
+    import json
+    from pathlib import Path
+
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    rules: List[MockRule] = []
+    for index, entry in enumerate(data.get("rules", [])):
+        if not isinstance(entry, dict):
+            raise ValueError(f"mock script rule {index} must be an object")
+        unknown = set(entry) - {
+            "pattern",
+            "responses",
+            "mode",
+            "target",
+            "case_sensitive",
+            "cycle",
+            "error",
+            "comment",
+        }
+        if unknown:
+            raise ValueError(
+                f"mock script rule {index} has unknown key(s): {sorted(unknown)}"
+            )
+        rules.append(
+            MockRule.make(
+                pattern=entry.get("pattern", ""),
+                responses=entry.get("responses", ()),
+                mode=entry.get("mode", MATCH_SUBSTRING),
+                target=entry.get("target", TARGET_PROMPT),
+                case_sensitive=entry.get("case_sensitive", False),
+                cycle=entry.get("cycle", True),
+                error=entry.get("error"),
+            )
+        )
+    if not rules:
+        raise ValueError(f"{path} defines no rules")
+    return MockAdapter(
+        rules,
+        model=data.get("model", DEFAULT_MODEL),
+        default_response=data.get("default_response"),
+        seed=data.get("seed", 0),
+    )
