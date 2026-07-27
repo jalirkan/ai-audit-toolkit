@@ -171,6 +171,9 @@ class TestMeasurementRendering(unittest.TestCase):
     def test_count_renders_as_x_of_n(self):
         self.assertEqual(Measurement.count("exceptions", 3, 25).render(), "3 of 25")
 
+    def test_a_bare_tally_renders_without_a_denominator(self):
+        self.assertEqual(Measurement.count("claims_screened", 40, 40).render(), "40")
+
     def test_non_default_confidence_is_reported_accurately(self):
         text = Measurement.proportion("r", 5, 20, confidence=0.99).render()
         self.assertIn("99% CI", text)

@@ -266,6 +266,10 @@ class Measurement:
             return f"not tested (n=0) [{self.name}]"
 
         if self.kind == KIND_COUNT:
+            # "3 of 25" where the count is drawn from a population; a bare
+            # tally (value == n) has no meaningful denominator to show.
+            if int(self.value) == self.n:
+                return str(int(self.value))
             return f"{int(self.value)} of {self.n}"
 
         def fmt(x: float) -> str:
