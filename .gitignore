@@ -1,0 +1,17 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# local secrets
+.env
+.env*.local
+
+# generated evidence / reports (keep examples/ committed)
+/runs/
+*.db
+*.db-wal
+*.db-shm
+
+# os
+.DS_Store
