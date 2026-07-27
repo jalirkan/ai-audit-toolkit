@@ -5,6 +5,13 @@ Each phase ends with passing tests and a commit. Stdlib-first; the only
 optional dependency is network access to a real model, and every phase must
 be fully testable offline against the mock adapter.
 
+> **Status, 2026-07-27: Phases 0–6 complete.** The v1 definition of done below
+> is met. A verification sweep followed (clean checkout, no keys, network
+> blocked at `connect()`), which found and fixed a boundary defect in the drift
+> bootstrap — see DECISIONS D-035. Of the stretch list, the multi-model
+> comparison matrix and latency accounting are done. Remaining: golden-dataset
+> RAG harness, token accounting, scheduled re-runs.
+
 ## Conventions (inherited from the workstation)
 
 - Python standard library only where practical; justify any dependency.
@@ -76,8 +83,26 @@ ai-audit-toolkit/
 - End-to-end example run + sample generated report in `examples/`.
 
 ## Stretch
-- Golden-dataset RAG faithfulness harness; multi-model comparison matrix;
-  cost/latency accounting per battery; scheduled re-runs with alerting.
+
+Done:
+- **Multi-model comparison matrix** (`compare/`, `cli.py compare`). One battery
+  across several endpoints, outcomes and intervals side by side. Produces no
+  overall ranking, and names the metrics whose intervals overlap — ordering
+  those by point estimate would invent a difference the sample cannot support.
+- **Latency accounting** per endpoint, with a nonparametric bootstrap interval.
+
+Not done, and why:
+- **Token accounting.** Adapters receive usage counts on the response but
+  nothing carries them onto the `Trial`, so the figures are not in the evidence
+  to aggregate. Close it by extending `Trial`, not by estimating.
+- **Cost accounting.** Deliberately omitted rather than deferred: prices change
+  and vary by contract, and a stale rate baked into an audit artifact is worse
+  than none.
+- **Golden-dataset RAG faithfulness harness.** Overlaps the citation probe;
+  worth doing when there is a dataset to point it at.
+- **Scheduled re-runs with alerting.** Needs infrastructure that does not fit
+  the stdlib-only, no-install constraint. `drift` plus a cron entry covers most
+  of it today.
 
 ## Definition of done (v1)
 A user points the toolkit at any model endpoint (or the mock), runs a named

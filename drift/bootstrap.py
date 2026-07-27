@@ -70,6 +70,8 @@ __all__ = [
     "binomial_pmf",
     "binomial_cdf",
     "bootstrap_proportion_difference",
+    "bootstrap_mean_interval",
+    "newcombe_difference",
 ]
 
 
@@ -104,6 +106,64 @@ class BootstrapInterval:
             f"[{self.low:+.3f}, {self.high:+.3f}], "
             f"{self.resamples} resamples, seed {self.seed}{note})"
         )
+
+
+def bootstrap_mean_interval(
+    values: Sequence[float],
+    *,
+    confidence: float = 0.95,
+    resamples: int = DEFAULT_RESAMPLES,
+    seed: int = DEFAULT_SEED,
+) -> BootstrapInterval:
+    """Percentile interval for the mean of ``values``.
+
+    Ordinary nonparametric bootstrap: resample the observed values with
+    replacement. Used for quantities like latency, where there is no binomial
+    structure to exploit and no analytic interval worth preferring -- a normal
+    approximation would be wrong on the skewed distributions latency actually
+    has.
+
+    ``point`` is the observed mean, not the mean of the resamples.
+    """
+    if not values:
+        raise ValueError("cannot bootstrap the mean of an empty sample")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError(f"confidence must be in (0, 1), got {confidence}")
+    if resamples < 1:
+        raise ValueError(f"resamples must be positive, got {resamples}")
+
+    observed = list(values)
+    n = len(observed)
+    point = sum(observed) / n
+
+    if n == 1:
+        # One observation says nothing about spread. Resampling it would
+        # produce a zero-width interval implying otherwise.
+        return BootstrapInterval(
+            point=point,
+            low=float("-inf"),
+            high=float("inf"),
+            confidence=confidence,
+            resamples=0,
+            seed=seed,
+        )
+
+    rng = random.Random(seed)
+    means = sorted(
+        sum(observed[int(rng.random() * n)] for _ in range(n)) / n
+        for _ in range(resamples)
+    )
+    alpha = 1.0 - confidence
+    low_index = int(alpha / 2.0 * resamples)
+    high_index = min(int((1.0 - alpha / 2.0) * resamples), resamples - 1)
+    return BootstrapInterval(
+        point=point,
+        low=means[low_index],
+        high=means[high_index],
+        confidence=confidence,
+        resamples=resamples,
+        seed=seed,
+    )
 
 
 def newcombe_difference(

@@ -33,6 +33,7 @@ from adapters.mock import load_mock_script
 from adapters.remote import ADAPTER_MOCK, ADAPTER_NAMES, build_adapter
 from battery.runner import BatteryResult, run_battery
 from battery.spec import BatterySpec
+from compare.matrix import run_comparison
 from core.evidence import OUTCOME_FAIL
 from drift.baseline import BaselineStore
 from drift.compare import compare_runs
@@ -44,6 +45,7 @@ from frameworks.catalog import (
 from frameworks.coverage import build_coverage
 from journal.store import Journal
 from probes.base import PROBES, available_probes
+from report.comparison import build_comparison_report
 from report.document import render_html, render_markdown
 from report.letter import build_letter
 from report.workpaper import build_workpapers
@@ -317,6 +319,76 @@ def cmd_baseline_list(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _parse_endpoint(spec: str):
+    """Parse ``label=kind[:detail]`` into ``(label, adapter)``.
+
+    Accepted forms::
+
+        prod=mock:suites/demo-endpoint.json    scripted offline fixture
+        baseline=mock                          the bare deterministic mock
+        vendor=anthropic:claude-sonnet-4-5     real endpoint, needs its key
+        local=openai:llama-3-8b                OpenAI-compatible endpoint
+    """
+    if "=" not in spec:
+        raise SystemExit(
+            f"endpoint {spec!r} must be written label=kind[:detail], "
+            "e.g. prod=mock:suites/demo-endpoint.json"
+        )
+    label, _, target = spec.partition("=")
+    if not label:
+        raise SystemExit(f"endpoint {spec!r} has an empty label")
+    kind, _, detail = target.partition(":")
+
+    if kind == ADAPTER_MOCK:
+        if detail:
+            try:
+                return label, load_mock_script(detail)
+            except (OSError, ValueError) as exc:
+                raise SystemExit(f"endpoint {label!r}: {exc}")
+        return label, build_adapter(ADAPTER_MOCK)
+    if kind in ADAPTER_NAMES:
+        try:
+            return label, build_adapter(kind, model=detail or None)
+        except ValueError as exc:
+            raise SystemExit(f"endpoint {label!r}: {exc}")
+    raise SystemExit(
+        f"endpoint {label!r}: unknown kind {kind!r}; expected one of "
+        f"{list(ADAPTER_NAMES)}"
+    )
+
+
+def cmd_compare(args: argparse.Namespace) -> int:
+    spec = _load_spec(args.suite)
+    endpoints = [_parse_endpoint(e) for e in args.endpoint]
+
+    journal: Optional[Journal] = None
+    if not args.no_journal:
+        journal = Journal(args.journal)
+    try:
+        matrix = run_comparison(spec, endpoints, journal=journal)
+    finally:
+        if journal:
+            journal.close()
+
+    print("\n".join(matrix.summary_lines()))
+
+    if args.out:
+        directory = Path(args.out)
+        directory.mkdir(parents=True, exist_ok=True)
+        document = build_comparison_report(matrix, prepared_by=args.prepared_by)
+        for fmt, render in (("md", render_markdown), ("html", render_html)):
+            if fmt in args.format:
+                path = directory / f"comparison-{spec.name}.{fmt}"
+                path.write_text(render(document), encoding="utf-8")
+                print(f"\nWrote {path}")
+
+    return (
+        EXIT_FINDINGS
+        if any(e.result.outcome == OUTCOME_FAIL for e in matrix.endpoints)
+        else EXIT_OK
+    )
+
+
 def cmd_probes(args: argparse.Namespace) -> int:
     for probe_id in available_probes():
         probe_cls = PROBES[probe_id]
@@ -463,6 +535,29 @@ def build_parser() -> argparse.ArgumentParser:
     listing = baseline_sub.add_parser("list", help="list saved baselines")
     add_store_args(listing)
     listing.set_defaults(func=cmd_baseline_list)
+
+    compare = subparsers.add_parser(
+        "compare", help="run one battery against several endpoints"
+    )
+    compare.add_argument("suite")
+    compare.add_argument(
+        "--endpoint",
+        action="append",
+        required=True,
+        metavar="LABEL=KIND[:DETAIL]",
+        help=(
+            "an endpoint to compare; repeat for each. "
+            "e.g. prod=mock:suites/demo-endpoint.json, baseline=mock, "
+            "vendor=anthropic:claude-sonnet-4-5"
+        ),
+    )
+    add_journal_args(compare)
+    compare.add_argument("--out", default="", help="write a comparison report here")
+    compare.add_argument(
+        "--format", nargs="+", default=["md"], choices=["md", "html"]
+    )
+    compare.add_argument("--prepared-by", default="")
+    compare.set_defaults(func=cmd_compare)
 
     probes = subparsers.add_parser("probes", help="list available procedures")
     probes.add_argument("-v", "--verbose", action="store_true")

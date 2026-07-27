@@ -358,3 +358,22 @@ if it does not blind the detector.
 The lesson worth keeping: the failure appeared in about 2% of pairs and only at
 the boundaries. Spot-checking a handful of cases would have missed it. The grid
 comparison against an independent method is now a test.
+
+## D-036 · 2026-07-27 · Comparisons rank nothing and name what they cannot separate
+`compare` runs one battery across several endpoints and produces no overall
+ranking and no per-endpoint score, for the same reason a battery has no
+composite (D-016): a leak rate and an agreement rate are not commensurable, and
+which one matters depends on the workload — a judgment for the reader.
+
+The addition that makes the table honest is the "not distinguished" list. A
+reader handed point estimates will order them, so wherever every endpoint's
+interval overlaps every other's, the matrix says the run has not shown them to
+differ. Two endpoints at 1/20 and 2/20 look like a 2x difference and are not
+distinguishable at all.
+
+Latency is reported with a nonparametric bootstrap interval — the distribution
+is skewed, so a normal approximation would misstate it. Token totals are absent
+because nothing carries adapter usage counts onto the `Trial`, and the honest
+fix is to extend `Trial` rather than approximate. Prices are absent by choice,
+not omission: they change, they vary by contract, and a stale rate baked into
+an audit artifact is worse than none.

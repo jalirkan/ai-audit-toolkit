@@ -57,7 +57,17 @@ python cli.py baseline save <run-id> q3-2026   # label a run as a reference
 python cli.py drift suites/baseline.json --baseline q3-2026
 python cli.py probes -v                        # what procedures exist
 python cli.py coverage suites/baseline.json    # projected framework coverage
+
+# one battery across several candidate endpoints
+python cli.py compare suites/baseline.json \
+  --endpoint incumbent=mock:suites/demo-endpoint.json \
+  --endpoint candidate=anthropic:claude-sonnet-4-5 --out runs
 ```
+
+`compare` produces no overall ranking and no per-endpoint score. It lists the
+outcomes and intervals side by side, and separately names the metrics where
+every interval overlaps — because ordering those by point estimate would invent
+a difference the sample does not support.
 
 To test a real endpoint, name the adapter and set its key. There is no fallback
 in either direction — asking for a real adapter without a key is an error, never
@@ -136,6 +146,7 @@ battery/     named suites defined as JSON data; run and roll up
 journal/     hash-chained SQLite evidence store
 drift/       baselines and bootstrap comparison
 frameworks/  control catalogs (original summaries) and coverage mapping
+compare/     one battery across several endpoints, side by side
 report/      one document model, rendered to Markdown and standalone HTML
 suites/      battery specs
 examples/    a generated end-to-end run
