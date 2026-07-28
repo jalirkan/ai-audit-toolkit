@@ -380,6 +380,7 @@ class CitationFaithfulnessProbe(Probe):
                         "claims_unsupported": len(exceptions),
                         "unsupported_claims": [a.to_dict() for a in exceptions],
                     },
+                    usage=response.usage,
                 )
             )
 

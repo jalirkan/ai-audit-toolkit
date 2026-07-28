@@ -159,6 +159,16 @@ class TestProbeMechanics(unittest.TestCase):
         self.assertEqual(evidence.trials[0].prompt, PARAPHRASES[0])
         self.assertEqual(evidence.trials[0].response_text, CONSENSUS_ANSWER)
 
+    def test_trials_carry_adapter_usage(self):
+        evidence = ConsistencyProbe(cases=[case()]).run(
+            MockAdapter.always(CONSENSUS_ANSWER)
+        )[0]
+        for trial in evidence.trials:
+            self.assertIsNotNone(trial.usage)
+            self.assertIn("prompt_tokens", trial.usage)
+            self.assertIn("completion_tokens", trial.usage)
+            self.assertGreater(trial.usage["prompt_tokens"], 0)
+
     def test_evidence_is_serializable(self):
         evidence = ConsistencyProbe(cases=[case()]).run(
             MockAdapter.always(CONSENSUS_ANSWER)

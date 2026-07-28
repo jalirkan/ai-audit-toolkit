@@ -24,6 +24,7 @@ from core.evidence import (
     Evidence,
     Measurement,
     ModelFingerprint,
+    Trial,
 )
 from drift.bootstrap import bootstrap_mean_interval
 from journal.store import Journal
@@ -210,6 +211,100 @@ class TestOperationalFigures(unittest.TestCase):
             matrix.endpoints[0].total_calls, matrix.endpoints[0].result.total_trials
         )
 
+    def test_token_totals_sum_what_the_adapter_reported(self):
+        matrix = run_comparison(SPEC, [("a", clean_adapter())])
+        tokens = matrix.endpoints[0].token_accounting()
+        self.assertEqual(tokens.calls_without_usage, 0)
+        self.assertEqual(tokens.calls_with_usage, tokens.calls)
+        self.assertIsNotNone(tokens.prompt_tokens)
+        self.assertIsNotNone(tokens.completion_tokens)
+        self.assertGreater(tokens.prompt_tokens, 0)
+        self.assertGreater(tokens.completion_tokens, 0)
+        # Cross-check against the trials themselves so the aggregate cannot
+        # drift from the evidence that produced it.
+        prompt = sum(
+            t.usage["prompt_tokens"]
+            for e in matrix.endpoints[0].result.evidence
+            for t in e.trials
+            if t.usage and "prompt_tokens" in t.usage
+        )
+        self.assertEqual(tokens.prompt_tokens, prompt)
+
+    def test_missing_usage_is_counted_not_zeroed(self):
+        evidence = Evidence(
+            probe_id="injection-resistance",
+            outcome=OUTCOME_PASS,
+            fingerprint=ModelFingerprint(adapter="mock", model="silent"),
+            started_at="2026-07-27T00:00:00.000000Z",
+            finished_at="2026-07-27T00:00:01.000000Z",
+            trials=(
+                Trial(
+                    index=0,
+                    prompt="p0",
+                    response_text="r0",
+                    usage={"prompt_tokens": 10, "completion_tokens": 3},
+                ),
+                Trial(index=1, prompt="p1", response_text="r1"),
+            ),
+            measurements=(
+                Measurement.proportion(
+                    "leak_rate", 0, 2, direction=DIRECTION_LOWER_IS_BETTER
+                ),
+            ),
+            config={"unit": "u"},
+        )
+        endpoint = EndpointRun(
+            label="silent",
+            description="mock:silent",
+            result=BatteryResult(
+                battery="b",
+                run_id="run-silent",
+                started_at="2026-07-27T00:00:00.000000Z",
+                finished_at="2026-07-27T00:00:01.000000Z",
+                fingerprint=ModelFingerprint(adapter="mock", model="silent"),
+                evidence=(evidence,),
+            ),
+        )
+        tokens = endpoint.token_accounting()
+        self.assertEqual(tokens.calls_with_usage, 1)
+        self.assertEqual(tokens.calls_without_usage, 1)
+        self.assertEqual(tokens.prompt_tokens, 10)
+        self.assertEqual(tokens.completion_tokens, 3)
+        self.assertIn("1/2 calls reported usage", tokens.render_prompt())
+
+    def test_no_usage_at_all_reads_as_not_reported(self):
+        evidence = Evidence(
+            probe_id="injection-resistance",
+            outcome=OUTCOME_PASS,
+            fingerprint=ModelFingerprint(adapter="mock", model="none"),
+            started_at="2026-07-27T00:00:00.000000Z",
+            finished_at="2026-07-27T00:00:01.000000Z",
+            trials=(Trial(index=0, prompt="p", response_text="r"),),
+            measurements=(
+                Measurement.proportion(
+                    "leak_rate", 0, 1, direction=DIRECTION_LOWER_IS_BETTER
+                ),
+            ),
+            config={"unit": "u"},
+        )
+        endpoint = EndpointRun(
+            label="none",
+            description="mock:none",
+            result=BatteryResult(
+                battery="b",
+                run_id="run-none",
+                started_at="2026-07-27T00:00:00.000000Z",
+                finished_at="2026-07-27T00:00:01.000000Z",
+                fingerprint=ModelFingerprint(adapter="mock", model="none"),
+                evidence=(evidence,),
+            ),
+        )
+        tokens = endpoint.token_accounting()
+        self.assertIsNone(tokens.prompt_tokens)
+        self.assertIsNone(tokens.completion_tokens)
+        self.assertEqual(tokens.render_prompt(), "not reported")
+        self.assertEqual(tokens.total_tokens, None)
+
 
 class TestBootstrapMean(unittest.TestCase):
     def test_interval_brackets_the_observed_mean(self):
@@ -271,6 +366,12 @@ class TestComparisonReport(unittest.TestCase):
     def test_prices_are_explicitly_absent(self):
         text = render_markdown(build_comparison_report(self.matrix()))
         self.assertIn("Prices are deliberately absent", text)
+
+    def test_token_columns_appear_in_operational_figures(self):
+        text = render_markdown(build_comparison_report(self.matrix()))
+        self.assertIn("Prompt tokens", text)
+        self.assertIn("Completion tokens", text)
+        self.assertIn("calls reported usage", text)
 
     def test_no_bare_rates_in_either_format(self):
         percent = re.compile(r"\d+(?:\.\d+)?\s*%")

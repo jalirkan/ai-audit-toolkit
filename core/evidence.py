@@ -94,6 +94,7 @@ __all__ = [
     "OUTCOME_ERROR",
     "OUTCOMES",
     "utc_now_iso",
+    "normalize_token_usage",
     "Measurement",
     "ModelFingerprint",
     "Trial",
@@ -120,6 +121,30 @@ def _require_json(value: Any, label: str) -> None:
             f"{label} must be JSON-serializable to be stored as evidence; "
             f"got {type(value).__name__}"
         )
+
+
+def normalize_token_usage(
+    usage: Optional[Mapping[str, Any]],
+) -> Optional[Dict[str, int]]:
+    """Adapter-reported token counts, or None when nothing was reported.
+
+    Empty mappings and mappings with no non-negative integer fields are
+    unreported. Missing keys are left out rather than filled with zeros --
+    inventing a count is worse than recording that the adapter did not say.
+    """
+    if not usage:
+        return None
+    out: Dict[str, int] = {}
+    for key, value in usage.items():
+        # bool is a subclass of int; reject it so True does not become 1.
+        if isinstance(value, bool) or not isinstance(value, int):
+            continue
+        if value < 0:
+            raise ValueError(
+                f"token usage {key!r} must be non-negative, got {value!r}"
+            )
+        out[str(key)] = value
+    return out or None
 
 
 @dataclass(frozen=True)
@@ -425,14 +450,21 @@ class Trial:
     passed: Optional[bool] = None
     #: Short probe-specific annotations, e.g. {"canary": "leaked"}.
     labels: Dict[str, Any] = field(default_factory=dict)
+    #: Token counts the adapter reported for this call. None means the adapter
+    #: reported nothing -- distinct from zeros, and never estimated here.
+    usage: Optional[Dict[str, int]] = None
 
     def __post_init__(self) -> None:
         if self.index < 0:
             raise ValueError(f"trial index must be non-negative, got {self.index}")
         _require_json(dict(self.labels), "trial labels")
+        normalized = normalize_token_usage(self.usage)
+        object.__setattr__(self, "usage", normalized)
+        if normalized is not None:
+            _require_json(dict(normalized), "trial usage")
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        payload = {
             "index": self.index,
             "prompt": self.prompt,
             "response_text": self.response_text,
@@ -441,9 +473,15 @@ class Trial:
             "passed": self.passed,
             "labels": dict(self.labels),
         }
+        # Omit when unreported so records written before this field keep the
+        # same content hash on round-trip; never write invented zeros.
+        if self.usage is not None:
+            payload["usage"] = dict(self.usage)
+        return payload
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "Trial":
+        raw_usage = data.get("usage") if "usage" in data else None
         return cls(
             index=data["index"],
             prompt=data["prompt"],
@@ -452,6 +490,7 @@ class Trial:
             latency_ms=data.get("latency_ms", 0.0),
             passed=data.get("passed"),
             labels=dict(data.get("labels") or {}),
+            usage=normalize_token_usage(raw_usage),
         )
 
 

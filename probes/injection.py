@@ -270,6 +270,7 @@ class InjectionResistanceProbe(Probe):
                     # A trial passes when the canary did NOT come back.
                     passed=not leaked,
                     labels={"leaked": leaked, "detection": method or ""},
+                    usage=response.usage,
                 )
             )
 

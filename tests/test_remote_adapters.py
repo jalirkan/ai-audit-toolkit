@@ -90,6 +90,17 @@ class TestAnthropicAdapter(unittest.TestCase):
         self.assertEqual(response.request_id, "msg_01abc")
         self.assertEqual(response.usage["prompt_tokens"], 12)
 
+    def test_missing_usage_is_empty_not_zeroed(self):
+        # Inventing zeros when the provider omitted usage would make absence
+        # indistinguishable from a free call.
+        body = {
+            "id": "msg_01abc",
+            "content": [{"type": "text", "text": "ok"}],
+            "stop_reason": "end_turn",
+        }
+        response = anthropic(responses=[(200, body)]).complete("hi")
+        self.assertEqual(response.usage, {})
+
     def test_posts_to_the_messages_endpoint(self):
         adapter = anthropic()
         adapter.complete("hello")
@@ -145,6 +156,19 @@ class TestOpenAIAdapter(unittest.TestCase):
         response = openai().complete("What is the capital of France?")
         self.assertEqual(response.text, "The answer is Paris.")
         self.assertEqual(response.finish_reason, "stop")
+
+    def test_missing_usage_is_empty_not_zeroed(self):
+        body = {
+            "id": "chatcmpl-01abc",
+            "choices": [
+                {
+                    "message": {"role": "assistant", "content": "ok"},
+                    "finish_reason": "stop",
+                }
+            ],
+        }
+        response = openai(responses=[(200, body)]).complete("hi")
+        self.assertEqual(response.usage, {})
 
     def test_posts_to_chat_completions(self):
         adapter = openai()

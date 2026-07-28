@@ -113,14 +113,16 @@ class AnthropicAdapter(HttpModelAdapter):
             if isinstance(block, dict) and block.get("type") == "text"
         )
         usage = payload.get("usage") or {}
+        reported: Dict[str, int] = {}
+        if "input_tokens" in usage and usage["input_tokens"] is not None:
+            reported["prompt_tokens"] = int(usage["input_tokens"])
+        if "output_tokens" in usage and usage["output_tokens"] is not None:
+            reported["completion_tokens"] = int(usage["output_tokens"])
         return {
             "text": text,
             "finish_reason": payload.get("stop_reason"),
             "request_id": payload.get("id"),
-            "usage": {
-                "prompt_tokens": usage.get("input_tokens", 0),
-                "completion_tokens": usage.get("output_tokens", 0),
-            },
+            "usage": reported,
         }
 
 
@@ -188,14 +190,16 @@ class OpenAICompatibleAdapter(HttpModelAdapter):
             )
         message = choices[0].get("message") or {}
         usage = payload.get("usage") or {}
+        reported: Dict[str, int] = {}
+        if "prompt_tokens" in usage and usage["prompt_tokens"] is not None:
+            reported["prompt_tokens"] = int(usage["prompt_tokens"])
+        if "completion_tokens" in usage and usage["completion_tokens"] is not None:
+            reported["completion_tokens"] = int(usage["completion_tokens"])
         return {
             "text": message.get("content") or "",
             "finish_reason": choices[0].get("finish_reason"),
             "request_id": payload.get("id"),
-            "usage": {
-                "prompt_tokens": usage.get("prompt_tokens", 0),
-                "completion_tokens": usage.get("completion_tokens", 0),
-            },
+            "usage": reported,
         }
 
 

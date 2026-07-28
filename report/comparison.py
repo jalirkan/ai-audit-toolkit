@@ -132,22 +132,40 @@ def build_comparison_report(
     latency_rows = []
     for endpoint in matrix.endpoints:
         measurement = endpoint.latency_measurement(seed=seed)
+        tokens = endpoint.token_accounting()
         latency_rows.append(
             (
                 endpoint.label,
                 str(endpoint.total_calls),
                 measurement.render() if measurement else "not measured",
+                tokens.render_prompt(),
+                tokens.render_completion(),
+                tokens.coverage_label(),
             )
         )
     sections.append(
         Section(
             "Operational figures",
             (
-                Table(("Endpoint", "Calls", "Mean latency (ms)"), tuple(latency_rows)),
+                Table(
+                    (
+                        "Endpoint",
+                        "Calls",
+                        "Mean latency (ms)",
+                        "Prompt tokens",
+                        "Completion tokens",
+                        "Usage coverage",
+                    ),
+                    tuple(latency_rows),
+                ),
                 Paragraph(
-                    "Prices are deliberately absent: they change, they vary by "
-                    "contract, and a stale rate baked into an audit artifact is "
-                    "worse than none. Multiply calls by your own rate card."
+                    "Token totals are sums of what each adapter reported on "
+                    "the trial. Calls with no usage are counted in the "
+                    "coverage column rather than filled with zeros. Prices "
+                    "are deliberately absent: they change, they vary by "
+                    "contract, and a stale rate baked into an audit artifact "
+                    "is worse than none. Multiply calls or tokens by your "
+                    "own rate card."
                 ),
             ),
             level=2,

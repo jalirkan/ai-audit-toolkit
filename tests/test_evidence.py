@@ -24,6 +24,7 @@ from core.evidence import (
     Measurement,
     ModelFingerprint,
     Trial,
+    normalize_token_usage,
     utc_now_iso,
 )
 
@@ -233,6 +234,7 @@ class TestTrial(unittest.TestCase):
             latency_ms=12.5,
             passed=False,
             labels={"canary": "leaked"},
+            usage={"prompt_tokens": 12, "completion_tokens": 5},
         )
         self.assertEqual(Trial.from_dict(t.to_dict()), t)
 
@@ -243,6 +245,31 @@ class TestTrial(unittest.TestCase):
     def test_rejects_unserializable_labels(self):
         with self.assertRaises(TypeError):
             Trial(index=0, prompt="p", response_text="r", labels={"x": object()})
+
+    def test_usage_none_is_omitted_from_serialization(self):
+        # Records written before this field must keep a stable content hash.
+        t = Trial(index=0, prompt="p", response_text="r")
+        self.assertNotIn("usage", t.to_dict())
+        self.assertIsNone(Trial.from_dict(t.to_dict()).usage)
+
+    def test_empty_usage_normalizes_to_unreported(self):
+        self.assertIsNone(Trial(index=0, prompt="p", response_text="r", usage={}).usage)
+        self.assertIsNone(normalize_token_usage({}))
+        self.assertIsNone(normalize_token_usage(None))
+
+    def test_usage_does_not_invent_zeros_for_missing_keys(self):
+        usage = normalize_token_usage({"prompt_tokens": 9})
+        self.assertEqual(usage, {"prompt_tokens": 9})
+        self.assertNotIn("completion_tokens", usage)
+
+    def test_rejects_negative_token_counts(self):
+        with self.assertRaises(ValueError):
+            Trial(
+                index=0,
+                prompt="p",
+                response_text="r",
+                usage={"prompt_tokens": -1},
+            )
 
 
 class TestEvidence(unittest.TestCase):

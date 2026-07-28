@@ -229,6 +229,7 @@ class ConsistencyProbe(Probe):
                 latency_ms=responses[i].latency_ms,
                 passed=agrees[i],
                 labels=labels[i],
+                usage=responses[i].usage,
             )
             for i in range(n)
         )

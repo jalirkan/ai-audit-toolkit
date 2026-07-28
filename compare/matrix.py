@@ -20,16 +20,17 @@ invent a distinction the sample does not support.
 
 ## Operational figures, not costs
 
-Call counts and mean latency (with a bootstrap interval, since latency
-distributions are skewed and a normal approximation would misstate them) are
-reported. Prices are not, deliberately: they change, they vary by contract, and
-a stale price baked into an audit artifact is worse than no price at all.
-Multiply by your own rate card.
+Call counts, mean latency (with a bootstrap interval, since latency
+distributions are skewed and a normal approximation would misstate them), and
+token totals the adapters actually reported are shown. Prices are not,
+deliberately: they change, they vary by contract, and a stale price baked into
+an audit artifact is worse than no price at all. Multiply by your own rate
+card.
 
-Token totals are not reported either, but for a duller reason: adapters receive
-usage counts on the response and nothing currently carries them onto the trial,
-so the figures are not in the evidence to aggregate. That is a gap to close by
-extending ``Trial``, not something to approximate here.
+Token totals are sums of what landed on each ``Trial``. When an adapter did not
+report usage for a call, that absence is counted rather than filled in -- a
+total over a partial set of calls says how many calls contributed, never that
+the missing ones used zero tokens.
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ from journal.store import Journal
 
 __all__ = [
     "EndpointRun",
+    "TokenAccounting",
     "MetricRow",
     "ComparisonMatrix",
     "run_comparison",
@@ -63,6 +65,55 @@ __all__ = [
 
 def _unit_key(evidence: Evidence) -> Tuple[str, str]:
     return (evidence.probe_id, str(evidence.config.get("unit", "")))
+
+
+@dataclass(frozen=True)
+class TokenAccounting:
+    """Token totals drawn only from trials that reported usage.
+
+    ``prompt_tokens`` / ``completion_tokens`` are None when no trial reported
+    that field -- not zero. ``calls_without_usage`` makes the coverage gap
+    visible so a partial total cannot be mistaken for a complete one.
+    """
+
+    calls: int
+    calls_with_usage: int
+    calls_without_usage: int
+    prompt_tokens: Optional[int]
+    completion_tokens: Optional[int]
+
+    @property
+    def total_tokens(self) -> Optional[int]:
+        if self.prompt_tokens is None and self.completion_tokens is None:
+            return None
+        return (self.prompt_tokens or 0) + (self.completion_tokens or 0)
+
+    def coverage_label(self) -> str:
+        return f"{self.calls_with_usage}/{self.calls} calls reported usage"
+
+    def render_prompt(self) -> str:
+        if self.prompt_tokens is None:
+            return "not reported"
+        if self.calls_without_usage:
+            return f"{self.prompt_tokens} ({self.coverage_label()})"
+        return str(self.prompt_tokens)
+
+    def render_completion(self) -> str:
+        if self.completion_tokens is None:
+            return "not reported"
+        if self.calls_without_usage:
+            return f"{self.completion_tokens} ({self.coverage_label()})"
+        return str(self.completion_tokens)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "calls": self.calls,
+            "calls_with_usage": self.calls_with_usage,
+            "calls_without_usage": self.calls_without_usage,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens,
+        }
 
 
 @dataclass(frozen=True)
@@ -114,6 +165,34 @@ class EndpointRun:
     @property
     def total_calls(self) -> int:
         return self.result.total_trials
+
+    def token_accounting(self) -> TokenAccounting:
+        """Sum adapter-reported token counts; never estimate the missing ones."""
+        calls = 0
+        with_usage = 0
+        prompt_sum = 0
+        completion_sum = 0
+        saw_prompt = False
+        saw_completion = False
+        for evidence in self.result.evidence:
+            for trial in evidence.trials:
+                calls += 1
+                if trial.usage is None:
+                    continue
+                with_usage += 1
+                if "prompt_tokens" in trial.usage:
+                    prompt_sum += trial.usage["prompt_tokens"]
+                    saw_prompt = True
+                if "completion_tokens" in trial.usage:
+                    completion_sum += trial.usage["completion_tokens"]
+                    saw_completion = True
+        return TokenAccounting(
+            calls=calls,
+            calls_with_usage=with_usage,
+            calls_without_usage=calls - with_usage,
+            prompt_tokens=prompt_sum if saw_prompt else None,
+            completion_tokens=completion_sum if saw_completion else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -272,6 +351,7 @@ class ComparisonMatrix:
                     "run_id": e.result.run_id,
                     "fingerprint": e.result.fingerprint.to_dict(),
                     "total_calls": e.result.total_trials,
+                    "tokens": e.token_accounting().to_dict(),
                 }
                 for e in self.endpoints
             ],

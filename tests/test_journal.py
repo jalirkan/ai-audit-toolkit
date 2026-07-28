@@ -356,17 +356,21 @@ class TestPersistence(unittest.TestCase):
             first.close()
 
             second = Journal(path)
-            self.addCleanup(second.close)
-            self.assertEqual(len(second), 1)
-            self.assertEqual(second.head(), head)
-            self.assertTrue(second.verify(expected_head=head).ok)
+            try:
+                self.assertEqual(len(second), 1)
+                self.assertEqual(second.head(), head)
+                self.assertTrue(second.verify(expected_head=head).ok)
+            finally:
+                second.close()
 
     def test_parent_directories_are_created(self):
         with TemporaryDirectory() as tmp:
             path = Path(tmp) / "a" / "b" / "journal.db"
             journal = Journal(path)
-            self.addCleanup(journal.close)
-            self.assertTrue(path.exists())
+            try:
+                self.assertTrue(path.exists())
+            finally:
+                journal.close()
 
     def test_context_manager_closes(self):
         with TemporaryDirectory() as tmp:
@@ -402,10 +406,12 @@ class TestVerificationResultRendering(unittest.TestCase):
             conn.close()
 
             journal = Journal(path)
-            self.addCleanup(journal.close)
-            summary = journal.verify().summary()
-            self.assertIn("BROKEN", summary)
-            self.assertIn("entry 1", summary)
+            try:
+                summary = journal.verify().summary()
+                self.assertIn("BROKEN", summary)
+                self.assertIn("entry 1", summary)
+            finally:
+                journal.close()
 
 
 if __name__ == "__main__":
