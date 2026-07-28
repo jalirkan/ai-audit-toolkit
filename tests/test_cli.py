@@ -307,6 +307,133 @@ class TestBaselineAndDrift(CliTestCase):
         self.assertNotEqual(code, cli.EXIT_OK)
 
 
+class TestMonitor(CliTestCase):
+    def _injection_suite(self) -> str:
+        path = self.root / "injection-only.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "name": "monitor-injection",
+                    "probes": [
+                        {"probe_id": "injection-resistance", "config": {}}
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return str(path)
+
+    def test_monitor_writes_status_with_no_drift(self):
+        suite = self._injection_suite()
+        status = str(self.root / "status.json")
+        code, out = run_cli(
+            "run", suite, "--no-journal", "--baseline", "ref", *self.base_args()
+        )
+        self.assertIn(code, (cli.EXIT_OK, cli.EXIT_FINDINGS))
+        code, out = run_cli(
+            "monitor",
+            suite,
+            "--baseline",
+            "ref",
+            "--no-journal",
+            "--status-out",
+            status,
+            "--resamples",
+            "500",
+            *self.base_args(),
+        )
+        self.assertEqual(code, cli.EXIT_OK)
+        self.assertIn("no drift detected", out)
+        payload = json.loads(Path(status).read_text(encoding="utf-8"))
+        self.assertFalse(payload["has_drift"])
+        self.assertEqual(payload["baseline"], "ref")
+        self.assertEqual(payload["exit_code"], cli.EXIT_OK)
+        self.assertIn("run_id", payload)
+
+    def test_monitor_exits_drift_when_the_model_regresses(self):
+        suite = self._injection_suite()
+        status = str(self.root / "status.json")
+        clean = self.root / "clean-endpoint.json"
+        clean.write_text(
+            json.dumps(
+                {
+                    "model": "clean-assistant",
+                    "rules": [
+                        {
+                            "mode": "any",
+                            "responses": (
+                                "I can't share that. Is there something about "
+                                "your shipment I can help with?"
+                            ),
+                        }
+                    ],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        demo = str(REPO_ROOT / "suites" / "demo-endpoint.json")
+        run_cli(
+            "run",
+            suite,
+            "--no-journal",
+            "--mock-script",
+            str(clean),
+            "--baseline",
+            "pre",
+            *self.base_args(),
+        )
+        code, out = run_cli(
+            "monitor",
+            suite,
+            "--baseline",
+            "pre",
+            "--no-journal",
+            "--mock-script",
+            demo,
+            "--status-out",
+            status,
+            "--resamples",
+            "500",
+            *self.base_args(),
+        )
+        self.assertEqual(code, cli.EXIT_DRIFT)
+        self.assertIn("DRIFT DETECTED", out)
+        payload = json.loads(Path(status).read_text(encoding="utf-8"))
+        self.assertTrue(payload["has_drift"])
+        self.assertEqual(payload["exit_reason"], "drift-detected")
+
+
+class TestRag(CliTestCase):
+    GOLDEN = str(REPO_ROOT / "datasets" / "northwind-rag-golden.json")
+
+    def test_screen_only_passes_the_shipped_dataset(self):
+        code, out = run_cli("rag", self.GOLDEN, "--screen-only")
+        self.assertEqual(code, cli.EXIT_OK)
+        self.assertIn("[PASS]", out)
+        self.assertIn("screen_accuracy", out)
+        self.assertIn("95% CI", out)
+
+    def test_screen_only_can_write_status(self):
+        status = str(self.root / "rag-status.json")
+        code, _ = run_cli(
+            "rag", self.GOLDEN, "--screen-only", "--status-out", status
+        )
+        self.assertEqual(code, cli.EXIT_OK)
+        payload = json.loads(Path(status).read_text(encoding="utf-8"))
+        self.assertEqual(payload["outcome"], "pass")
+        self.assertIn("accuracy", payload)
+
+    def test_missing_dataset_is_a_clean_error(self):
+        code, out = run_cli(
+            "rag", str(self.root / "missing.json"), "--screen-only"
+        )
+        self.assertNotEqual(code, cli.EXIT_OK)
+        self.assertTrue(out.strip())
+
+
 class TestInformationalCommands(unittest.TestCase):
     def test_probes_lists_every_registered_procedure(self):
         code, out = run_cli("probes")

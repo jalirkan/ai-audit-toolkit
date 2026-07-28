@@ -6,6 +6,8 @@
     python cli.py report <run-id>
     python cli.py baseline save <run-id> pre-upgrade
     python cli.py drift suites/baseline.json --baseline pre-upgrade
+    python cli.py monitor suites/baseline.json --baseline pre-upgrade
+    python cli.py rag datasets/northwind-rag-golden.json --screen-only
     python cli.py probes
     python cli.py coverage suites/baseline.json
 
@@ -34,7 +36,7 @@ from adapters.remote import ADAPTER_MOCK, ADAPTER_NAMES, build_adapter
 from battery.runner import BatteryResult, run_battery
 from battery.spec import BatterySpec
 from compare.matrix import run_comparison
-from core.evidence import OUTCOME_FAIL
+from core.evidence import OUTCOME_FAIL, OUTCOME_PASS, utc_now_iso
 from drift.baseline import BaselineStore
 from drift.compare import compare_runs
 from frameworks.catalog import (
@@ -45,6 +47,8 @@ from frameworks.catalog import (
 from frameworks.coverage import build_coverage
 from journal.store import Journal
 from probes.base import PROBES, available_probes
+from rag.dataset import load_dataset
+from rag.harness import run_live, run_screen_check
 from report.comparison import build_comparison_report
 from report.document import render_html, render_markdown
 from report.letter import build_letter
@@ -53,6 +57,7 @@ from report.workpaper import build_workpapers
 DEFAULT_RUNS_DIR = "runs"
 DEFAULT_JOURNAL = "runs/journal.db"
 DEFAULT_BASELINES_DIR = "baselines"
+DEFAULT_MONITOR_STATUS = "runs/monitor-status.json"
 
 EXIT_OK = 0
 EXIT_FINDINGS = 1
@@ -289,6 +294,100 @@ def cmd_drift(args: argparse.Namespace) -> int:
     return EXIT_DRIFT if report.has_drift else EXIT_OK
 
 
+def _write_monitor_status(path: str, payload: Dict[str, Any]) -> Path:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return target
+
+
+def cmd_monitor(args: argparse.Namespace) -> int:
+    """Re-run a suite against a baseline and write a machine-readable status.
+
+    Intended for cron / Task Scheduler: exit non-zero on drift; scrape
+    ``--status-out`` rather than stdout if you need structured detail.
+    """
+    spec = _load_spec(args.suite)
+    adapter = _adapter_from_args(args)
+    store = BaselineStore(args.baselines_dir)
+    try:
+        baseline = store.load(args.baseline)
+    except FileNotFoundError as exc:
+        raise SystemExit(str(exc))
+
+    journal: Optional[Journal] = None
+    if not args.no_journal:
+        journal = Journal(args.journal)
+    try:
+        current = run_battery(spec, adapter, journal=journal)
+    finally:
+        if journal:
+            journal.close()
+
+    _save_run(current, args.runs_dir)
+    report = compare_runs(
+        baseline.result,
+        current,
+        baseline_label=args.baseline,
+        resamples=args.resamples,
+        seed=args.seed,
+    )
+    has_drift = report.has_drift
+    exit_code = EXIT_DRIFT if has_drift else EXIT_OK
+    status = {
+        "checked_at": utc_now_iso(),
+        "suite": args.suite,
+        "baseline": args.baseline,
+        "run_id": current.run_id,
+        "has_drift": has_drift,
+        "exit_code": exit_code,
+        "exit_reason": "drift-detected" if has_drift else "no-drift",
+        "summary": report.summary_lines(),
+        "report": report.to_dict(),
+    }
+    status_path = _write_monitor_status(args.status_out, status)
+    print("\n".join(report.summary_lines()))
+    print(f"Monitor status written to {status_path}")
+    return exit_code
+
+
+def cmd_rag(args: argparse.Namespace) -> int:
+    try:
+        dataset = load_dataset(args.dataset)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+
+    if args.screen_only:
+        result = run_screen_check(
+            dataset,
+            min_accuracy=args.min_accuracy,
+            min_sample=args.min_sample,
+        )
+        print("\n".join(result.summary_lines()))
+        if args.status_out:
+            path = _write_monitor_status(args.status_out, result.to_dict())
+            print(f"Screen-check result written to {path}")
+        if result.outcome == OUTCOME_PASS:
+            return EXIT_OK
+        if result.outcome == OUTCOME_FAIL:
+            return EXIT_FINDINGS
+        return EXIT_OK  # inconclusive: ran cleanly, did not establish a finding
+
+    adapter = _adapter_from_args(args)
+    evidence = run_live(
+        dataset,
+        adapter,
+        max_unsupported_answer_rate=args.max_unsupported_answer_rate,
+        min_sample=args.min_sample,
+    )
+    failed = False
+    for record in evidence:
+        print(record.summary())
+        if record.outcome == OUTCOME_FAIL:
+            failed = True
+    return EXIT_FINDINGS if failed else EXIT_OK
+
+
 def cmd_baseline_save(args: argparse.Namespace) -> int:
     result = _load_run(args.run_id, args.runs_dir)
     store = BaselineStore(args.baselines_dir)
@@ -520,6 +619,60 @@ def build_parser() -> argparse.ArgumentParser:
     drift.add_argument("--resamples", type=int, default=10000)
     drift.add_argument("--seed", type=int, default=20260727)
     drift.set_defaults(func=cmd_drift)
+
+    monitor = subparsers.add_parser(
+        "monitor",
+        help="re-run vs a baseline and write a status file (for cron)",
+    )
+    monitor.add_argument("suite")
+    monitor.add_argument("--baseline", required=True, help="baseline label")
+    add_adapter_args(monitor)
+    add_journal_args(monitor)
+    add_store_args(monitor)
+    monitor.add_argument("--resamples", type=int, default=10000)
+    monitor.add_argument("--seed", type=int, default=20260727)
+    monitor.add_argument(
+        "--status-out",
+        default=DEFAULT_MONITOR_STATUS,
+        help="path for the machine-readable status JSON",
+    )
+    monitor.set_defaults(func=cmd_monitor)
+
+    rag = subparsers.add_parser(
+        "rag",
+        help="run a golden RAG faithfulness dataset (screen-check or live)",
+    )
+    rag.add_argument("dataset", help="path to a golden dataset JSON file")
+    rag.add_argument(
+        "--screen-only",
+        action="store_true",
+        help="score gold answers with the citation screen; no model calls",
+    )
+    rag.add_argument(
+        "--min-accuracy",
+        type=float,
+        default=0.9,
+        help="minimum screen accuracy for a pass (screen-only)",
+    )
+    rag.add_argument(
+        "--min-sample",
+        type=int,
+        default=20,
+        help="minimum items before a pass may be concluded",
+    )
+    rag.add_argument(
+        "--max-unsupported-answer-rate",
+        type=float,
+        default=0.2,
+        help="tolerance for the live citation probe",
+    )
+    rag.add_argument(
+        "--status-out",
+        default="",
+        help="optional path to write the screen-check result JSON",
+    )
+    add_adapter_args(rag)
+    rag.set_defaults(func=cmd_rag)
 
     baseline = subparsers.add_parser("baseline", help="manage baselines")
     baseline_sub = baseline.add_subparsers(dest="baseline_command", required=True)
