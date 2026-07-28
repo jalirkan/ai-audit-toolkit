@@ -55,6 +55,8 @@ python cli.py journal verify                   # check the hash chain
 python cli.py journal verify --expect-head sha256:...
 python cli.py baseline save <run-id> q3-2026   # label a run as a reference
 python cli.py drift suites/baseline.json --baseline q3-2026
+python cli.py monitor suites/baseline.json --baseline q3-2026
+python cli.py rag datasets/northwind-rag-golden.json --screen-only
 python cli.py probes -v                        # what procedures exist
 python cli.py coverage suites/baseline.json    # projected framework coverage
 
@@ -68,6 +70,25 @@ python cli.py compare suites/baseline.json \
 outcomes and intervals side by side, and separately names the metrics where
 every interval overlaps — because ordering those by point estimate would invent
 a difference the sample does not support.
+
+`rag --screen-only` scores planted gold answers against the citation screen with
+no model calls — a planted-signal check of the lexical screen itself. Omit
+`--screen-only` to run the same dataset's questions through the live citation
+probe against an adapter.
+
+`monitor` is the cron-friendly drift wrapper: same comparison as `drift`, plus a
+status JSON (default `runs/monitor-status.json`) and exit code 4 when drift is
+detected. Example crontab (daily 06:00) and Windows Task Scheduler:
+
+```cron
+0 6 * * * cd /path/to/ai-audit-toolkit && python cli.py monitor suites/baseline.json --baseline q3-2026 --status-out runs/monitor-status.json || mail -s "AI audit drift" you@example.com < runs/monitor-status.json
+```
+
+```powershell
+# Task Scheduler action (adjust paths):
+python C:\Users\jalir\Projects\ai-audit-toolkit\cli.py monitor suites\baseline.json --baseline q3-2026
+# Alert on exit code 4 (EXIT_DRIFT) in the task's settings or a wrapper script.
+```
 
 To test a real endpoint, name the adapter and set its key. There is no fallback
 in either direction — asking for a real adapter without a key is an error, never
@@ -92,6 +113,11 @@ python cli.py run suites/baseline.json --adapter openai
   or reordering, and reports every problem rather than the first.
 - **Drift monitoring** — baseline a run, re-run after a change, and get a
   bootstrap comparison that flags statistically significant regressions.
+  `monitor` writes a status file for external schedulers (cron / Task
+  Scheduler); there is no built-in daemon or emailer.
+- **Golden RAG harness** — closed-context dataset of sources + labeled gold
+  answers for planted-signal checks of the citation screen
+  (`datasets/northwind-rag-golden.json`). Not a retrieval engine.
 - **Workpaper generation** — procedure, population, criterion, result,
   exceptions, limitations, and conclusion per unit tested, plus a
   management letter with findings ranked by a stated severity rule. Markdown
@@ -147,6 +173,8 @@ journal/     hash-chained SQLite evidence store
 drift/       baselines and bootstrap comparison
 frameworks/  control catalogs (original summaries) and coverage mapping
 compare/     one battery across several endpoints, side by side
+rag/         golden-dataset loader and citation-screen harness
+datasets/    shipped golden RAG faithfulness set
 report/      one document model, rendered to Markdown and standalone HTML
 suites/      battery specs
 examples/    a generated end-to-end run

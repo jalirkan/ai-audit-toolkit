@@ -372,8 +372,37 @@ differ. Two endpoints at 1/20 and 2/20 look like a 2x difference and are not
 distinguishable at all.
 
 Latency is reported with a nonparametric bootstrap interval — the distribution
-is skewed, so a normal approximation would misstate it. Token totals are absent
-because nothing carries adapter usage counts onto the `Trial`, and the honest
-fix is to extend `Trial` rather than approximate. Prices are absent by choice,
-not omission: they change, they vary by contract, and a stale rate baked into
-an audit artifact is worse than none.
+is skewed, so a normal approximation would misstate it. Token totals sum what
+adapters reported onto each `Trial`; calls with no usage are counted as absent
+rather than filled with zeros or estimates. Prices are absent by choice, not
+omission: they change, they vary by contract, and a stale rate baked into an
+audit artifact is worse than none.
+
+## D-037 · 2026-07-27 · Token usage is first-class on Trial; absence is not zero
+Adapters already return usage on `ModelResponse`. Probes copy it onto `Trial`
+so the journal and aggregates see the same figures. `usage=None` means the
+adapter reported nothing for that call — distinct from a reported zero, and
+never replaced by an estimate (word-count proxies included). Serialization
+omits the field when unreported so records written before this field keep a
+stable content hash on round-trip; when present, only keys the adapter
+actually sent are stored. Remote parsers follow the same rule: a missing
+provider usage object becomes an empty mapping, not invented zeros. Compare
+aggregates sum reported trials and print coverage (`k/n calls reported
+usage`) so a partial total cannot be read as complete.
+
+## D-038 · 2026-07-27 · Golden RAG is a planted-signal harness, not a second probe
+The stretch "RAG faithfulness harness" reuses the citation lexical screen. The
+dataset supplies closed-context sources (auditor-chosen chunks standing in for
+retrieval) plus gold answers labeled `faithful` / `unfaithful` for what the
+*screen* should conclude — not a model verdict and not a retrieval ranking.
+`rag --screen-only` scores those gold answers offline with Wilson accuracy and
+confusion tallies; live mode builds a `CitationCase` and runs
+`citation-faithfulness`. There is no embedding retriever and no second
+faithfulness metric that could drift from the citation procedure.
+
+## D-039 · 2026-07-27 · Monitor is drift for external schedulers
+Always-on alerting does not fit the stdlib, no-install constraint. `cli.py
+monitor` re-runs a suite against a saved baseline (same comparison as `drift`),
+writes a machine-readable status JSON, and exits `EXIT_DRIFT` when
+`has_drift` is true. Cron or Task Scheduler owns the schedule and the alert
+channel; this toolkit does not daemonize, mail, or page.
