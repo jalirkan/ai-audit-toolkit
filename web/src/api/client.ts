@@ -17,6 +17,10 @@ import type {
   CoveragePayload,
   DriftPayload,
 } from "./comparison";
+import type {
+  JournalEntriesPayload,
+  VerificationPayload,
+} from "../views/JournalView";
 import {
   type BatteryResult,
   type ProbeInfo,
@@ -113,6 +117,16 @@ export const api = {
     return parseDocument(
       await request<unknown>(`/api/runs/${runId}/workpaper${query}`, signal),
     );
+  },
+
+  journalEntries: (limit = 200, signal?: AbortSignal) =>
+    request<JournalEntriesPayload>(`/api/journal/entries?limit=${limit}`, signal),
+
+  journalVerify: (expectHead = "", signal?: AbortSignal) => {
+    const query = expectHead
+      ? `?expect_head=${encodeURIComponent(expectHead)}`
+      : "";
+    return request<VerificationPayload>(`/api/journal/verify${query}`, signal);
   },
 
   probes: (signal?: AbortSignal) => request<ProbeInfo[]>("/api/probes", signal),

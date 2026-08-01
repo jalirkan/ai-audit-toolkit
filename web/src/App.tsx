@@ -22,6 +22,11 @@ import { RunDetail } from "./views/RunDetail";
 import { RunsIndex } from "./views/RunsIndex";
 import { TrialDetail } from "./views/TrialDetail";
 import { Workpaper } from "./views/Workpaper";
+import {
+  JournalView,
+  type JournalEntriesPayload,
+  type VerificationPayload,
+} from "./views/JournalView";
 
 const ID = "([0-9a-f]{16})";
 
@@ -32,7 +37,8 @@ type Route =
   | { name: "coverage"; runId: string }
   | { name: "trials"; runId: string; unit: number }
   | { name: "drift"; runId: string; baseline: string }
-  | { name: "compare"; runs: string[] };
+  | { name: "compare"; runs: string[] }
+  | { name: "journal" };
 
 function parseRoute(hash: string): Route {
   let m: RegExpMatchArray | null;
@@ -46,6 +52,7 @@ function parseRoute(hash: string): Route {
     return { name: "drift", runId: m[1]!, baseline: m[2]! };
   if ((m = hash.match(new RegExp(`^#/compare/${ID}/${ID}$`))))
     return { name: "compare", runs: [m[1]!, m[2]!] };
+  if (hash === "#/journal") return { name: "journal" };
   if ((m = hash.match(new RegExp(`^#/runs/${ID}$`))))
     return { name: "run", runId: m[1]! };
   return { name: "runs" };
@@ -61,6 +68,9 @@ export function App() {
   const [coverage, setCoverage] = useState<CoveragePayload | null>(null);
   const [drift, setDrift] = useState<DriftPayload | null>(null);
   const [matrix, setMatrix] = useState<ComparisonPayload | null>(null);
+  const [journal, setJournal] = useState<JournalEntriesPayload | null>(null);
+  const [verification, setVerification] = useState<VerificationPayload | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -106,6 +116,12 @@ export function App() {
     if (route.name === "compare") {
       api.comparison(route.runs, [], c.signal).then(setMatrix).catch(fail);
     } else setMatrix(null);
+    if (route.name === "journal") {
+      api.journalEntries(200, c.signal).then(setJournal).catch(fail);
+    } else {
+      setJournal(null);
+      setVerification(null);
+    }
     return () => c.abort();
   }, [route]);
 
@@ -122,6 +138,22 @@ export function App() {
     body = <Drift report={drift} />;
   } else if (route.name === "compare" && matrix) {
     body = <Comparison matrix={matrix} />;
+  } else if (route.name === "journal" && journal) {
+    body = (
+      <JournalView
+        entries={journal}
+        verification={verification}
+        verifying={verifying}
+        onVerify={(expectHead) => {
+          setVerifying(true);
+          api
+            .journalVerify(expectHead)
+            .then(setVerification)
+            .catch(fail)
+            .finally(() => setVerifying(false));
+        }}
+      />
+    );
   } else if (route.name === "trials" && run) {
     const evidence = run.evidence[route.unit];
     body = evidence ? (
@@ -168,7 +200,12 @@ export function App() {
         <a href="#/" className="text-sm font-semibold tracking-tight text-ink">
           Audit evidence
         </a>
-        <span className="text-xs text-muted">read-only · localhost</span>
+        <span className="flex items-baseline gap-4 text-xs text-muted">
+          <a href="#/journal" className="hover:text-ink">
+            journal
+          </a>
+          read-only · localhost
+        </span>
       </nav>
 
       {error && (
