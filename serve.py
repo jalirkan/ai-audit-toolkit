@@ -82,7 +82,9 @@ API_VERSION = 1
 #: the network is a different product with a different threat model, and
 #: making it one flag away invites someone to flip it.
 HOST = "127.0.0.1"
-DEFAULT_PORT = 8765
+#: 8765 is taken by the certifications project's study server on this machine,
+#: and two localhost tools fighting over a port is a confusing first run.
+DEFAULT_PORT = 8770
 
 DEFAULT_RUNS_DIR = "runs"
 DEFAULT_JOURNAL = "runs/journal.db"
