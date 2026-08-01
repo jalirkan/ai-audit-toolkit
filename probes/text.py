@@ -42,8 +42,22 @@ _LIST_MARKER_RE = re.compile(r"^\s*(?:[-*•]|\(?\d+[.)])\s*")
 
 _NUMERIC_RE = re.compile(r"^[0-9]")
 
+#: Words that flip the polarity of a claim. These are *also* stopwords, which
+#: is correct for similarity -- "the cat sat" and "the cat did not sit" are
+#: about the same subject -- and catastrophic for support checking, where they
+#: invert the meaning entirely. Polarity is therefore read from the raw text by
+#: :func:`is_negated`, separately from tokenisation.
+NEGATION_CUES: frozenset = frozenset(
+    """
+    not no never cannot neither nor without none nobody nothing
+    unable excluded prohibited forbidden refuses refuse denied
+    """.split()
+)
+
 __all__ = [
     "STOPWORDS",
+    "NEGATION_CUES",
+    "is_negated",
     "tokenize",
     "content_tokens",
     "jaccard",
@@ -66,6 +80,25 @@ def tokenize(text: str) -> List[str]:
 def content_tokens(text: str) -> Set[str]:
     """Token set with stopwords removed, for overlap comparisons."""
     return {t for t in tokenize(text) if t not in STOPWORDS}
+
+
+def is_negated(text: str) -> bool:
+    """True if ``text`` carries a negation cue.
+
+    A blunt instrument: it detects that a negation is present, not what it
+    scopes over. "Northwind does not ship animals, but does ship freight" reads
+    as negated in full. It exists because the alternative -- ignoring polarity,
+    which is what dropping ``not`` as a stopword amounts to -- lets a claim and
+    its exact opposite score as an equally good match against the same source.
+    For a support check that is the worst error available, so a coarse signal
+    beats none.
+
+    Contractions are caught via ``n't`` because the tokenizer splits them.
+    """
+    lowered = text.lower()
+    if "n't" in lowered or "n’t" in lowered:
+        return True
+    return any(token in NEGATION_CUES for token in tokenize(lowered))
 
 
 def jaccard(a: Set[str], b: Set[str]) -> float:

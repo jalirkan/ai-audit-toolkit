@@ -1,0 +1,50 @@
+{
+  "api_version": 1,
+  "engine_schema": {
+    "evidence": 1,
+    "battery": 1,
+    "journal": 1,
+    "baseline": 1
+  },
+  "frameworks": [
+    {
+      "id": "eu-ai-act",
+      "name": "EU Artificial Intelligence Act",
+      "publication": "Regulation (EU) 2024/1689",
+      "partial": true,
+      "ids_verified": "2026-07-27",
+      "control_count": 6,
+      "citation": "EU Artificial Intelligence Act (Regulation (EU) 2024/1689) -- partial catalog, identifiers checked 2026-07-27"
+    },
+    {
+      "id": "iso-iec-42001",
+      "name": "ISO/IEC 42001 AI management system",
+      "publication": "ISO/IEC 42001:2023, Annex A",
+      "partial": true,
+      "ids_verified": "2026-07-27",
+      "control_count": 4,
+      "citation": "ISO/IEC 42001 AI management system (ISO/IEC 42001:2023, Annex A) -- partial catalog, identifiers checked 2026-07-27"
+    },
+    {
+      "id": "nist-ai-rmf",
+      "name": "NIST AI Risk Management Framework",
+      "publication": "NIST AI 100-1, AI RMF 1.0",
+      "partial": true,
+      "ids_verified": "2026-07-27",
+      "control_count": 7,
+      "citation": "NIST AI Risk Management Framework (NIST AI 100-1, AI RMF 1.0) -- partial catalog, identifiers checked 2026-07-27"
+    }
+  ],
+  "decisions_count": 43,
+  "probe_count": 3,
+  "read_only": true,
+  "host": "127.0.0.1",
+  "mapping_disclaimer": "A mapping means the procedure produced evidence relevant to the control, never that the control is satisfied. Controls generally require governance, policy, and documentation no test harness supplies. Catalogs are partial: a control's absence is not a statement about it.",
+  "paths": {
+    "runs": "runs",
+    "journal": "runs\\journal.db",
+    "baselines": "baselines",
+    "suites": "suites",
+    "datasets": "datasets"
+  }
+}

@@ -1,0 +1,12 @@
+# Normalize line endings in the repository.
+#
+# Without this, a Windows checkout can rewrite whole files to CRLF and every
+# line shows as changed. That happened: a one-line port change in serve.py was
+# buried inside 6,850 lines of phantom diff. Text is LF in the repository and
+# in the working tree; the index is the single source of truth for line endings.
+
+* text=auto eol=lf
+
+# Binary — never touched.
+*.png binary
+*.db  binary

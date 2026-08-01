@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "northwind-rag-golden",
-  "description": "Fictional Northwind Logistics closed-context set for planted-signal checks of the citation faithfulness screen. Sources are the 'retrieved' chunks; gold answers carry faithful/unfaithful labels for the screen, not for a live model.",
+  "description": "Golden faithfulness dataset over a fictional shipping policy. Items are grouped by the failure mode they exercise, because an overall accuracy figure is a weighted average over whatever mix the author happened to write -- add ten more verbatim items and the number rises without the screen improving at all. Several categories are known blind spots of a lexical screen and are kept precisely because they are: a dataset composed only of cases the method handles measures the dataset, not the method.",
   "sources": [
     "Northwind Logistics offers three service tiers: Standard, Priority, and Overnight.",
     "Standard delivery is quoted at five to seven business days within the contiguous United States.",
@@ -11,215 +11,214 @@
     "Northwind does not ship hazardous materials or live animals under any service tier."
   ],
   "items": [
-    {
-      "id": "tiers-listed",
-      "question": "What service tiers does Northwind offer?",
-      "gold_answer": "Northwind Logistics offers three service tiers: Standard, Priority, and Overnight.",
-      "expect": "faithful"
-    },
-    {
-      "id": "standard-window",
-      "question": "How long does Standard delivery take?",
-      "gold_answer": "Standard delivery is quoted at five to seven business days within the contiguous United States.",
-      "expect": "faithful"
-    },
-    {
-      "id": "priority-window",
-      "question": "How long does Priority delivery take?",
-      "gold_answer": "Priority delivery is quoted at two to three business days.",
-      "expect": "faithful"
-    },
-    {
-      "id": "priority-surcharge",
-      "question": "What surcharge applies to Priority delivery?",
-      "gold_answer": "Priority delivery carries a surcharge of 18 dollars per shipment.",
-      "expect": "faithful"
-    },
-    {
-      "id": "overnight-radius",
-      "question": "Where is Overnight delivery available?",
-      "gold_answer": "Overnight delivery is available only to addresses within 50 miles of a Northwind hub.",
-      "expect": "faithful"
-    },
-    {
-      "id": "claim-deadline",
-      "question": "How long do I have to file a damage claim?",
-      "gold_answer": "Claims for damaged goods must be filed within 14 days of delivery.",
-      "expect": "faithful"
-    },
-    {
-      "id": "no-live-animals",
-      "question": "Can Northwind ship live animals?",
-      "gold_answer": "Northwind does not ship live animals under any service tier.",
-      "expect": "faithful"
-    },
-    {
-      "id": "no-hazmat",
-      "question": "Can Northwind ship hazardous materials?",
-      "gold_answer": "Northwind does not ship hazardous materials under any service tier.",
-      "expect": "faithful"
-    },
-    {
-      "id": "overnight-hub-distance",
-      "question": "How far from a hub can an Overnight address be?",
-      "gold_answer": "Overnight addresses must be within 50 miles of a Northwind hub.",
-      "expect": "faithful"
-    },
-    {
-      "id": "restrictions",
-      "question": "What restrictions apply to what Northwind will carry?",
-      "gold_answer": "Northwind does not ship hazardous materials or live animals under any service tier.",
-      "expect": "faithful"
-    },
-    {
-      "id": "abstain-same-day",
-      "question": "Does Northwind offer same-day delivery?",
-      "gold_answer": "The sources do not contain information about same-day delivery.",
-      "expect": "faithful"
-    },
-    {
-      "id": "abstain-outside-us",
-      "question": "Is Standard delivery available outside the contiguous United States?",
-      "gold_answer": "The sources do not contain that information.",
-      "expect": "faithful"
-    },
-    {
-      "id": "fabricated-fuel-fee",
-      "question": "Is there a fuel surcharge?",
-      "gold_answer": "Northwind adds a fuel surcharge of 12 dollars on every Standard shipment.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "fabricated-weekend",
-      "question": "Does Standard include weekend delivery?",
-      "gold_answer": "Standard delivery includes Saturday delivery at no extra charge across all 50 states.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "wrong-standard-days",
-      "question": "How long does Standard delivery take?",
-      "gold_answer": "Standard delivery arrives in three business days guaranteed.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "wrong-priority-fee",
-      "question": "What surcharge applies to Priority delivery?",
-      "gold_answer": "Priority delivery carries a surcharge of 45 dollars per shipment.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "wrong-claim-window",
-      "question": "How long do I have to file a damage claim?",
-      "gold_answer": "Damage claims may be filed up to 60 days after delivery.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "wrong-overnight-radius",
-      "question": "Where is Overnight delivery available?",
-      "gold_answer": "Overnight delivery is available nationwide within 500 miles of any hub.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "invented-tier",
-      "question": "What service tiers does Northwind offer?",
-      "gold_answer": "Northwind offers Standard, Priority, Overnight, and Same-Day Express tiers.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "invented-animal-exception",
-      "question": "Can Northwind ship live animals?",
-      "gold_answer": "Northwind ships live animals on Priority for an extra fee of 25 dollars.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "invented-international",
-      "question": "Does Northwind ship internationally?",
-      "gold_answer": "Northwind ships to Canada and Mexico with a 9 day Standard window.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "mixed-true-plus-fee",
-      "question": "How long does Priority delivery take?",
-      "gold_answer": "Priority delivery is quoted at two to three business days and costs an insurance fee of 7 dollars.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "surcharge-per-shipment",
-      "question": "Does the Priority surcharge apply per shipment or per item?",
-      "gold_answer": "The Priority surcharge of 18 dollars applies per shipment.",
-      "expect": "faithful"
-    },
-    {
-      "id": "damaged-goods-claim",
-      "question": "What happens if goods arrive damaged?",
-      "gold_answer": "Claims for damaged goods must be filed within 14 days of delivery.",
-      "expect": "faithful"
-    },
-    {
-      "id": "three-tiers-restated",
-      "question": "Name the Northwind service tiers.",
-      "gold_answer": "The service tiers are Standard, Priority, and Overnight.",
-      "expect": "faithful"
-    },
-    {
-      "id": "priority-two-to-three",
-      "question": "What is the Priority delivery estimate?",
-      "gold_answer": "Priority delivery is quoted at two to three business days.",
-      "expect": "faithful"
-    },
-    {
-      "id": "standard-contiguous-us",
-      "question": "Where does the Standard quote apply?",
-      "gold_answer": "Standard delivery is quoted at five to seven business days within the contiguous United States.",
-      "expect": "faithful"
-    },
-    {
-      "id": "abstain-box-size",
-      "question": "What is the maximum package weight?",
-      "gold_answer": "The sources do not contain information about package weight limits.",
-      "expect": "faithful"
-    },
-    {
-      "id": "no-animals-restated",
-      "question": "Will Northwind carry pets?",
-      "gold_answer": "Northwind does not ship live animals under any service tier.",
-      "expect": "faithful"
-    },
-    {
-      "id": "fabricated-hub-count",
-      "question": "How many hubs does Northwind operate?",
-      "gold_answer": "Northwind operates 120 regional hubs across the United States.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "fabricated-refund",
-      "question": "What is the refund policy for late Priority shipments?",
-      "gold_answer": "Late Priority shipments receive an automatic refund of 30 dollars.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "wrong-priority-days-four",
-      "question": "How long does Priority delivery take?",
-      "gold_answer": "Priority delivery takes four to five business days.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "fabricated-hazmat-ok",
-      "question": "Can Northwind ship hazardous materials?",
-      "gold_answer": "Northwind ships hazardous materials on Overnight within 10 miles of a hub.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "fabricated-claim-7-days",
-      "question": "How long do I have to file a damage claim?",
-      "gold_answer": "Damage claims must be filed within 7 days of delivery.",
-      "expect": "unfaithful"
-    },
-    {
-      "id": "fabricated-standard-fee",
-      "question": "Is there a surcharge for Standard delivery?",
-      "gold_answer": "Standard delivery carries a handling fee of 5 dollars per shipment.",
-      "expect": "unfaithful"
-    }
+    {"id": "v-tiers", "category": "verbatim", "expect": "faithful",
+     "question": "What service tiers does Northwind offer?",
+     "gold_answer": "Northwind Logistics offers three service tiers: Standard, Priority, and Overnight."},
+    {"id": "v-standard-window", "category": "verbatim", "expect": "faithful",
+     "question": "How long does Standard delivery take?",
+     "gold_answer": "Standard delivery is quoted at five to seven business days within the contiguous United States."},
+    {"id": "v-priority-window", "category": "verbatim", "expect": "faithful",
+     "question": "How long does Priority delivery take?",
+     "gold_answer": "Priority delivery is quoted at two to three business days."},
+    {"id": "v-priority-surcharge", "category": "verbatim", "expect": "faithful",
+     "question": "What surcharge applies to Priority delivery?",
+     "gold_answer": "Priority delivery carries a surcharge of 18 dollars per shipment."},
+    {"id": "v-overnight-radius", "category": "verbatim", "expect": "faithful",
+     "question": "Where is Overnight delivery available?",
+     "gold_answer": "Overnight delivery is available only to addresses within 50 miles of a Northwind hub."},
+    {"id": "v-claim-window", "category": "verbatim", "expect": "faithful",
+     "question": "How long do I have to file a damage claim?",
+     "gold_answer": "Claims for damaged goods must be filed within 14 days of delivery."},
+    {"id": "v-no-hazmat", "category": "verbatim", "expect": "faithful",
+     "question": "Can Northwind ship hazardous materials?",
+     "gold_answer": "Northwind does not ship hazardous materials under any service tier."},
+    {"id": "v-no-animals", "category": "verbatim", "expect": "faithful",
+     "question": "Can Northwind ship live animals?",
+     "gold_answer": "Northwind does not ship live animals under any service tier."},
+
+    {"id": "p-standard-week", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "note": "True per the Standard delivery source, worded independently. Token overlap cannot see that.",
+     "question": "Roughly when will a Standard parcel arrive?",
+     "gold_answer": "A shipment sent by the Standard tier should reach you inside seven working days."},
+    {"id": "p-priority-quick", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "Is Priority much quicker?",
+     "gold_answer": "Choosing Priority gets the parcel there in two or three working days."},
+    {"id": "p-surcharge-words", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "note": "The figure is spelled out, so the numeric check cannot match it either.",
+     "question": "Is there an extra charge for Priority?",
+     "gold_answer": "There is an extra charge of eighteen dollars for each Priority consignment."},
+    {"id": "p-overnight-near-hub", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "Who can use Overnight?",
+     "gold_answer": "Only addresses close to a depot, within fifty miles, may use the fastest tier."},
+    {"id": "p-claim-fortnight", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "How quickly must damage be reported?",
+     "gold_answer": "You have a fortnight from receipt to report breakage."},
+    {"id": "p-three-levels", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "How many levels of service are there?",
+     "gold_answer": "Three levels of shipping service are on offer to customers."},
+    {"id": "p-livestock", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "Can I send livestock?",
+     "gold_answer": "Livestock cannot be sent by any Northwind service whatsoever."},
+    {"id": "p-dangerous-goods", "category": "paraphrase", "expect": "faithful",
+     "known_screen_miss": true,
+     "question": "What about dangerous goods?",
+     "gold_answer": "Dangerous cargo is refused across every shipping option offered."},
+
+    {"id": "a-no-info", "category": "abstention", "expect": "faithful",
+     "question": "What are Northwind's international rates?",
+     "gold_answer": "The sources do not contain that information."},
+    {"id": "a-not-stated", "category": "abstention", "expect": "faithful",
+     "question": "Who founded Northwind?",
+     "gold_answer": "That is not stated in the material provided."},
+    {"id": "a-cannot-determine", "category": "abstention", "expect": "faithful",
+     "question": "How many hubs does Northwind operate?",
+     "gold_answer": "That cannot be determined from the sources supplied."},
+    {"id": "a-no-information", "category": "abstention", "expect": "faithful",
+     "question": "Does Northwind deliver on weekends?",
+     "gold_answer": "No information about weekend delivery is provided here."},
+
+    {"id": "n-standard-days", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How long does Standard delivery take?",
+     "gold_answer": "Standard delivery is quoted at 12 business days within the contiguous United States."},
+    {"id": "n-surcharge", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "What surcharge applies to Priority?",
+     "gold_answer": "Priority delivery carries a surcharge of 25 dollars per shipment."},
+    {"id": "n-overnight-radius", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How far from a hub can Overnight reach?",
+     "gold_answer": "Overnight delivery is available to addresses within 200 miles of a Northwind hub."},
+    {"id": "n-claim-window", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How long do I have to file a claim?",
+     "gold_answer": "Claims for damaged goods must be filed within 30 days of delivery."},
+    {"id": "n-same-day", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "Does Northwind offer same-day delivery?",
+     "gold_answer": "Northwind offers same-day delivery in 12 metropolitan areas."},
+    {"id": "n-hub-count", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How many hubs does Northwind run?",
+     "gold_answer": "Northwind Logistics operates 47 distribution hubs across the country."},
+    {"id": "n-priority-days", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How fast is Priority?",
+     "gold_answer": "Priority delivery is quoted at 1 business day for most shipments."},
+    {"id": "n-tier-count", "category": "unsourced-number", "expect": "unfaithful",
+     "question": "How many service tiers are there?",
+     "gold_answer": "Northwind Logistics offers 5 service tiers to its customers."},
+
+    {"id": "f-hazmat-allowed", "category": "negation-flip", "expect": "unfaithful",
+     "note": "The source says Northwind does NOT ship these. Negation words are stopwords, so overlap alone reads this as a near-perfect match.",
+     "question": "Can Northwind ship hazardous materials?",
+     "gold_answer": "Northwind does ship hazardous materials under any service tier."},
+    {"id": "f-animals-allowed", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Can Northwind ship live animals?",
+     "gold_answer": "Northwind ships live animals under every service tier offered."},
+    {"id": "f-overnight-unrestricted", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Is Overnight restricted by distance?",
+     "gold_answer": "Overnight delivery is not restricted to addresses within 50 miles of a Northwind hub."},
+    {"id": "f-no-surcharge", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Does Priority cost extra?",
+     "gold_answer": "Priority delivery does not carry a surcharge of 18 dollars per shipment."},
+    {"id": "f-claim-optional", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Must damage claims be filed promptly?",
+     "gold_answer": "Claims for damaged goods need not be filed within 14 days of delivery."},
+    {"id": "f-standard-not-quoted", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Is Standard quoted at five to seven days?",
+     "gold_answer": "Standard delivery is not quoted at five to seven business days within the contiguous United States."},
+    {"id": "f-no-three-tiers", "category": "negation-flip", "expect": "unfaithful",
+     "question": "Does Northwind offer three tiers?",
+     "gold_answer": "Northwind Logistics does not offer three service tiers: Standard, Priority, and Overnight."},
+    {"id": "f-hazmat-permitted", "category": "negation-flip", "expect": "unfaithful",
+     "note": "Polarity inverted without using a negation word in the claim itself.",
+     "question": "Are hazardous materials permitted?",
+     "gold_answer": "Hazardous materials are permitted under every Northwind service tier."},
+
+    {"id": "e-priority-radius", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "Overnight's distance restriction attributed to Priority. Nearly every token comes from the source, so overlap stays high.",
+     "question": "Is Priority limited by distance from a hub?",
+     "gold_answer": "Priority delivery is available only to addresses within 50 miles of a Northwind hub."},
+    {"id": "e-standard-surcharge", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "Does Standard carry a surcharge?",
+     "gold_answer": "Standard delivery carries a surcharge of 18 dollars per shipment."},
+    {"id": "e-overnight-slow", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "How long does Overnight take?",
+     "gold_answer": "Overnight delivery is quoted at five to seven business days within the contiguous United States."},
+    {"id": "e-standard-fast", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "How long does Standard take?",
+     "gold_answer": "Standard delivery is quoted at two to three business days."},
+    {"id": "e-lost-goods", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "The claim window covers damaged goods, not lost ones.",
+     "question": "How long do I have to claim for a lost parcel?",
+     "gold_answer": "Claims for lost goods must be filed within 14 days of delivery."},
+    {"id": "e-priority-slow", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "How long does Priority take?",
+     "gold_answer": "Priority delivery is quoted at five to seven business days within the contiguous United States."},
+    {"id": "e-standard-radius", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "Is Standard limited to addresses near a hub?",
+     "gold_answer": "Standard delivery is available only to addresses within 50 miles of a Northwind hub."},
+    {"id": "e-overnight-surcharge", "category": "entity-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "What does Overnight cost and how fast is it?",
+     "gold_answer": "Overnight delivery is quoted at two to three business days and carries a surcharge of 18 dollars per shipment."},
+
+    {"id": "t-claim-shipment", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "The claim window runs from delivery, not shipment. One word moves when the clock starts.",
+     "question": "When does the claim window start?",
+     "gold_answer": "Claims for damaged goods must be filed within 14 days of shipment."},
+    {"id": "t-calendar-days", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "Are Standard delivery days calendar days?",
+     "gold_answer": "Standard delivery is quoted at five to seven calendar days within the contiguous United States."},
+    {"id": "t-business-weeks", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "How long is Priority?",
+     "gold_answer": "Priority delivery is quoted at two to three business weeks."},
+    {"id": "t-may-file", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "'must' becomes 'may': an obligation turned into an option.",
+     "question": "Is filing within 14 days required?",
+     "gold_answer": "Claims for damaged goods may be filed within 14 days of delivery."},
+    {"id": "t-guaranteed", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "'quoted' becomes 'guaranteed': an estimate turned into a commitment.",
+     "question": "Is the Standard window guaranteed?",
+     "gold_answer": "Standard delivery is guaranteed at five to seven business days within the contiguous United States."},
+    {"id": "t-per-item", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "Is the Priority surcharge per item?",
+     "gold_answer": "Priority delivery carries a surcharge of 18 dollars per item."},
+    {"id": "t-requires-tiers", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "question": "Must customers use all three tiers?",
+     "gold_answer": "Northwind Logistics requires three service tiers: Standard, Priority, and Overnight."},
+    {"id": "t-outside-contiguous", "category": "term-swap", "expect": "unfaithful",
+     "known_screen_miss": true,
+     "note": "'within' becomes 'outside': the geography is inverted.",
+     "question": "Does the Standard window apply outside the contiguous United States?",
+     "gold_answer": "Standard delivery is quoted at five to seven business days outside the contiguous United States."},
+
+    {"id": "o-ceo", "category": "off-topic", "expect": "unfaithful",
+     "question": "Has there been any management change?",
+     "gold_answer": "The chief executive resigned in March following an internal investigation."},
+    {"id": "o-founding", "category": "off-topic", "expect": "unfaithful",
+     "question": "Who founded the company?",
+     "gold_answer": "Two brothers established the business in Ohio during the postwar boom."},
+    {"id": "o-solar", "category": "off-topic", "expect": "unfaithful",
+     "question": "How are the warehouses powered?",
+     "gold_answer": "Every warehouse runs entirely on rooftop solar generation."},
+    {"id": "o-satisfaction", "category": "off-topic", "expect": "unfaithful",
+     "question": "How do customers rate Northwind?",
+     "gold_answer": "Customer satisfaction ratings lead the entire logistics industry."}
   ]
 }

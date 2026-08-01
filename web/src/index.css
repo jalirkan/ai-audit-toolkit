@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/*
+  A serious instrument, not a SaaS product.
+
+  Near-monochrome with one accent, used only where the eye must be sent
+  somewhere: the threshold marker and the active navigation item. Nothing is
+  coloured for decoration.
+
+  The outcome colours are deliberately NOT a good-to-bad ramp. Pass and fail
+  are both *findings* -- a procedure concluded -- so both are rendered as
+  present, solid marks. Inconclusive is the absence of a finding, so it is
+  rendered as absence: unfilled, hatched, dashed. It never sits between pass
+  and fail on a scale, because "we did not learn" is not "this is halfway to
+  bad" (D-011).
+
+  Every outcome is distinguishable by fill and shape as well as hue, so the
+  screens survive greyscale printing and colour vision deficiency. The
+  hatch pattern below is what carries that load.
+*/
+
+@theme {
+  --color-paper: #fcfcfb;
+  --color-raised: #ffffff;
+  --color-ink: #17171b;
+  --color-ink-soft: #45454e;
+  --color-muted: #6f6f7a;
+  --color-rule: #e2e2dd;
+  --color-rule-strong: #c9c9c2;
+
+  /* The single accent. Threshold marks and active state only. */
+  --color-accent: #2d4a72;
+  --color-accent-soft: #eaeef5;
+
+  /* Outcome hues. Pass and fail are findings; inconclusive is absence. */
+  --color-pass: #2f5d3f;
+  --color-fail: #8c2f22;
+  --color-inconclusive: #5a5a63;
+  --color-error: #6a4a12;
+
+  --font-sans: ui-sans-serif, "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Mono", "Consolas",
+    monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  /*
+    Dark is not an inverted afterthought: the paper warms to a true dark
+    ground and the outcome hues are re-picked for it rather than lightened
+    mechanically, which would flatten the pass/fail distinction.
+  */
+  @media (prefers-color-scheme: dark) {
+    @theme {
+      --color-paper: #131316;
+      --color-raised: #1a1a1f;
+      --color-ink: #ececed;
+      --color-ink-soft: #c2c2c8;
+      --color-muted: #8e8e99;
+      --color-rule: #2c2c33;
+      --color-rule-strong: #414149;
+      --color-accent: #8fb0dd;
+      --color-accent-soft: #1e2836;
+      --color-pass: #7fbf95;
+      --color-fail: #e08b7c;
+      --color-inconclusive: #9a9aa6;
+      --color-error: #d3ab5f;
+    }
+  }
+
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    /* Columns of figures must align. Non-negotiable in a table of rates. */
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Motion only where it aids continuity. Nothing pulses, nothing bounces. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+    The hatch that makes "inconclusive" legible without colour. A 45-degree
+    ruling reads as unfilled at any size and prints as unfilled too.
+  */
+  .hatch-absence {
+    background-image: repeating-linear-gradient(
+      45deg,
+      currentColor 0 1px,
+      transparent 1px 5px
+    );
+    opacity: 0.55;
+  }
+
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.9em;
+  }
+}
+
+/*
+  Auditors print workpapers. This has to survive a reviewer's desk: white
+  ground, black text, no navigation, and page breaks that do not cut a
+  finding in half.
+*/
+@media print {
+  @page {
+    margin: 18mm 16mm;
+  }
+
+  :root,
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  [data-print="hide"],
+  nav,
+  button {
+    display: none !important;
+  }
+
+  [data-print="break-before"] {
+    break-before: page;
+  }
+
+  /* A procedure, its result, and its limitations belong on one page. */
+  [data-print="keep-together"] {
+    break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+
+  /* Rules and marks must not vanish when the printer drops backgrounds. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

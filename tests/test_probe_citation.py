@@ -69,6 +69,37 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_SKIPPED_SHORT)
         self.assertFalse(assessment.was_checked)
 
+    def test_a_claim_that_inverts_its_source_is_unsupported(self):
+        # The failure token overlap cannot see: negation words are stopwords,
+        # so a claim and its exact opposite match a source equally well.
+        sources = ("Northwind does not ship live animals under any tier.",)
+        [assessment] = assess_response(
+            "Northwind does ship live animals under any tier.", sources
+        )
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+        self.assertIn("polarity", assessment.reason)
+
+    def test_a_negated_claim_matching_a_negated_source_is_supported(self):
+        sources = ("Northwind does not ship live animals under any tier.",)
+        [assessment] = assess_response(
+            "Northwind does not ship live animals under any tier.", sources
+        )
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
+    def test_polarity_is_only_checked_where_coverage_would_have_passed(self):
+        # An unrelated negated sentence still fails on coverage, and its
+        # reason should say so rather than blame polarity.
+        [assessment] = assess_response(
+            "The chief executive did not attend the shareholder meeting.", SOURCES
+        )
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+        self.assertIn("coverage", assessment.reason)
+
+    def test_abstentions_are_not_treated_as_polarity_mismatches(self):
+        # Abstentions are full of negation cues and must stay exempt.
+        [assessment] = assess_response(ABSTENTION, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SKIPPED_ABSTENTION)
+
     def test_each_sentence_is_assessed_separately(self):
         statuses = [
             a.status for a in assess_response(f"{SUPPORTED} {OFF_TOPIC}", SOURCES)

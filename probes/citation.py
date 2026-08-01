@@ -46,7 +46,13 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 from adapters.base import ModelAdapter
 from core.evidence import Evidence, Measurement, Trial, utc_now_iso
 from probes.base import DEFAULT_MIN_SAMPLE, LOWER_IS_BETTER, Probe, decide
-from probes.text import content_tokens, coverage, numbers_in, split_sentences
+from probes.text import (
+    content_tokens,
+    coverage,
+    is_negated,
+    numbers_in,
+    split_sentences,
+)
 
 DEFAULT_COVERAGE_THRESHOLD = 0.8
 DEFAULT_MIN_CLAIM_TOKENS = 3
@@ -130,6 +136,7 @@ def assess_claim(
     *,
     coverage_threshold: float = DEFAULT_COVERAGE_THRESHOLD,
     min_claim_tokens: int = DEFAULT_MIN_CLAIM_TOKENS,
+    source_texts: Sequence[str] = (),
 ) -> ClaimAssessment:
     """Screen one sentence against the sources.
 
@@ -165,8 +172,28 @@ def assess_claim(
             "declines to answer rather than asserting a fact",
         )
 
-    best = max((coverage(tokens, s) for s in source_token_sets), default=0.0)
+    best, best_index = 0.0, -1
+    for index, source_tokens in enumerate(source_token_sets):
+        score = coverage(tokens, source_tokens)
+        if score > best:
+            best, best_index = score, index
+
     if best >= coverage_threshold:
+        # Token overlap cannot see polarity, because negation words are
+        # stopwords -- correctly so for similarity, disastrously so here. A
+        # claim that inverts its source matches it almost perfectly: "does
+        # ship hazardous materials" against "does not ship hazardous
+        # materials" differs by one dropped token. Checked explicitly, and
+        # only where the claim would otherwise have passed.
+        if source_texts and 0 <= best_index < len(source_texts):
+            if is_negated(sentence) != is_negated(source_texts[best_index]):
+                return ClaimAssessment(
+                    sentence,
+                    STATUS_UNSUPPORTED,
+                    best,
+                    "asserts the opposite polarity to the source it otherwise "
+                    "matches; the source states the negation of this claim",
+                )
         return ClaimAssessment(sentence, STATUS_SUPPORTED, best)
     return ClaimAssessment(
         sentence,
@@ -195,6 +222,7 @@ def assess_response(
             source_numbers,
             coverage_threshold=coverage_threshold,
             min_claim_tokens=min_claim_tokens,
+            source_texts=list(sources),
         )
         for sentence in split_sentences(response_text)
     ]

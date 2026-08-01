@@ -242,6 +242,32 @@ class MetricRow:
             [m for m in self.by_label.values() if m.is_informative]
         ) and len(self.by_label) > 1
 
+    def to_dict(self) -> Dict[str, Any]:
+        """This row with every endpoint's measurement kept whole.
+
+        The measurements travel because a consumer that only learns *which*
+        metrics failed to separate the endpoints cannot show the reader why.
+        Drawing the overlapping intervals on one scale is the honest way to
+        present "not distinguished", and that needs the bounds, not a name.
+
+        ``all_overlap`` is computed here rather than left to the consumer so
+        the rule in :meth:`overlapping_labels` has exactly one home. A second
+        implementation deciding what a run did or did not establish is the
+        failure this project exists to prevent.
+        """
+        return {
+            "probe_id": self.probe_id,
+            "unit": self.unit,
+            "metric": self.metric,
+            "direction": self.direction,
+            "all_overlap": self.all_overlap,
+            "overlapping_labels": self.overlapping_labels(),
+            "by_label": {
+                label: measurement.to_dict()
+                for label, measurement in self.by_label.items()
+            },
+        }
+
 
 @dataclass(frozen=True)
 class ComparisonMatrix:
@@ -366,6 +392,10 @@ class ComparisonMatrix:
                 }
                 for probe_id, unit in self.units
             ],
+            # Every metric with its per-endpoint measurements intact. Additive:
+            # `undistinguished_metrics` below keeps its original shape, so a
+            # consumer written against the earlier payload is unaffected.
+            "metric_rows": [r.to_dict() for r in self.metric_rows()],
             "undistinguished_metrics": [
                 {"probe_id": r.probe_id, "unit": r.unit, "metric": r.metric}
                 for r in self.undistinguished_metrics()

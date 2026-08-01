@@ -1,0 +1,502 @@
+{
+  "active_probe_ids": [
+    "citation-faithfulness",
+    "injection-resistance",
+    "output-consistency"
+  ],
+  "active_capabilities": [
+    "drift-monitoring",
+    "evidence-journal",
+    "workpapers"
+  ],
+  "inactive_sources": [],
+  "frameworks": [
+    {
+      "framework": {
+        "schema_version": 1,
+        "id": "eu-ai-act",
+        "name": "EU Artificial Intelligence Act",
+        "publication": "Regulation (EU) 2024/1689",
+        "partial": true,
+        "ids_verified": "2026-07-27",
+        "note": "Partial catalog covering articles this toolkit can produce technical evidence for, drawn from the requirements for high-risk systems. Every summary below is original text written for this project describing what the article addresses. The Regulation's own text is not reproduced -- consult the Official Journal for the authoritative wording. Whether these articles apply at all depends on the system's classification, which is a legal question this toolkit does not answer.",
+        "controls": [
+          {
+            "id": "Article 9",
+            "summary": "A risk management process runs across the system's lifecycle, including testing against the risks it identifies.",
+            "topic": "risk-management"
+          },
+          {
+            "id": "Article 10",
+            "summary": "Training, validation and testing data are governed for quality, relevance and representativeness.",
+            "topic": "data-governance"
+          },
+          {
+            "id": "Article 12",
+            "summary": "Events are recorded automatically over the system's lifetime, to a standard that supports tracing what happened.",
+            "topic": "traceability"
+          },
+          {
+            "id": "Article 13",
+            "summary": "Deployers are given enough information to understand how the system behaves and where it should not be trusted.",
+            "topic": "documentation"
+          },
+          {
+            "id": "Article 15",
+            "summary": "The system reaches an appropriate level of accuracy, robustness and cybersecurity, including resilience against attempts to manipulate it through its inputs.",
+            "topic": "robustness"
+          },
+          {
+            "id": "Article 72",
+            "summary": "Performance is monitored once the system is in service, not only before release.",
+            "topic": "post-market"
+          }
+        ]
+      },
+      "counts": {
+        "no-evidence": 2,
+        "evidence-present": 3,
+        "tested-with-exceptions": 1
+      },
+      "controls": [
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 9",
+          "summary": "A risk management process runs across the system's lifecycle, including testing against the risks it identifies.",
+          "topic": "risk-management",
+          "status": "no-evidence",
+          "probe_ids": [],
+          "capabilities": [],
+          "outcome_counts": {},
+          "references": []
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 10",
+          "summary": "Training, validation and testing data are governed for quality, relevance and representativeness.",
+          "topic": "data-governance",
+          "status": "no-evidence",
+          "probe_ids": [],
+          "capabilities": [],
+          "outcome_counts": {},
+          "references": []
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 12",
+          "summary": "Events are recorded automatically over the system's lifetime, to a standard that supports tracing what happened.",
+          "topic": "traceability",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "evidence-journal"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 12",
+              "rationale": "Provides automatic, tamper-evident recording of assurance activity. Note this covers the audit procedures, not the production system's own logging, which is what the article principally concerns."
+            }
+          ]
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 13",
+          "summary": "Deployers are given enough information to understand how the system behaves and where it should not be trusted.",
+          "topic": "documentation",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "workpapers"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 13",
+              "rationale": "Measured behaviour and its stated limits are inputs to the information a deployer needs; the toolkit supplies the measurements, not the instructions for use."
+            }
+          ]
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 15",
+          "summary": "The system reaches an appropriate level of accuracy, robustness and cybersecurity, including resilience against attempts to manipulate it through its inputs.",
+          "topic": "robustness",
+          "status": "tested-with-exceptions",
+          "probe_ids": [
+            "citation-faithfulness",
+            "injection-resistance",
+            "output-consistency"
+          ],
+          "capabilities": [],
+          "outcome_counts": {
+            "fail": 2,
+            "pass": 1
+          },
+          "references": [
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 15",
+              "rationale": "Unsupported claims against provided sources are an accuracy failure of the kind the article addresses."
+            },
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 15",
+              "rationale": "The article covers resilience against attempts to manipulate the system through its inputs; a canary exfiltration battery tests exactly that behaviour, for one class of attack."
+            },
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 15",
+              "rationale": "Speaks to consistent performance: a system that answers differently depending on phrasing is not performing consistently."
+            }
+          ]
+        },
+        {
+          "framework": "eu-ai-act",
+          "control_id": "Article 72",
+          "summary": "Performance is monitored once the system is in service, not only before release.",
+          "topic": "post-market",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "drift-monitoring"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "eu-ai-act",
+              "control_id": "Article 72",
+              "rationale": "Contributes a repeatable technical procedure to post-market monitoring."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "framework": {
+        "schema_version": 1,
+        "id": "iso-iec-42001",
+        "name": "ISO/IEC 42001 AI management system",
+        "publication": "ISO/IEC 42001:2023, Annex A",
+        "partial": true,
+        "ids_verified": "2026-07-27",
+        "note": "Partial catalog. Annex A contains 38 controls across objectives A.2 to A.10; only those this toolkit can produce technical evidence for are listed. Every summary below is original text written for this project describing what the control addresses. No text from the standard is reproduced -- ISO/IEC 42001:2023 is a purchased document and its wording is not reproducible here. Re-verify these identifiers against your own copy before relying on them in a report.",
+        "controls": [
+          {
+            "id": "A.6.2.4",
+            "summary": "The AI system is verified and validated before it is relied upon, with the approach and the results recorded.",
+            "topic": "validation"
+          },
+          {
+            "id": "A.6.2.6",
+            "summary": "The deployed system is operated and monitored on an ongoing basis.",
+            "topic": "monitoring"
+          },
+          {
+            "id": "A.6.2.8",
+            "summary": "Events during operation are logged so that behaviour can be reconstructed after the fact.",
+            "topic": "traceability"
+          },
+          {
+            "id": "A.8.2",
+            "summary": "Users are given documentation describing what the system does and where its limits are.",
+            "topic": "documentation"
+          }
+        ]
+      },
+      "counts": {
+        "tested-with-exceptions": 1,
+        "evidence-present": 3
+      },
+      "controls": [
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.4",
+          "summary": "The AI system is verified and validated before it is relied upon, with the approach and the results recorded.",
+          "topic": "validation",
+          "status": "tested-with-exceptions",
+          "probe_ids": [
+            "citation-faithfulness",
+            "injection-resistance",
+            "output-consistency"
+          ],
+          "capabilities": [],
+          "outcome_counts": {
+            "fail": 2,
+            "pass": 1
+          },
+          "references": [
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.6.2.4",
+              "rationale": "A validation procedure with a recorded population, sample and exception list."
+            },
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.6.2.4",
+              "rationale": "Contributes one verification procedure, with its population and result, to the validation record for the system."
+            },
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.6.2.4",
+              "rationale": "A validation procedure whose population, sample and result are recorded."
+            }
+          ]
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.6",
+          "summary": "The deployed system is operated and monitored on an ongoing basis.",
+          "topic": "monitoring",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "drift-monitoring"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.6.2.6",
+              "rationale": "Supports ongoing monitoring of a system already in operation."
+            }
+          ]
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.6.2.8",
+          "summary": "Events during operation are logged so that behaviour can be reconstructed after the fact.",
+          "topic": "traceability",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "evidence-journal"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.6.2.8",
+              "rationale": "Records events with enough detail to reconstruct what was tested and what came back."
+            }
+          ]
+        },
+        {
+          "framework": "iso-iec-42001",
+          "control_id": "A.8.2",
+          "summary": "Users are given documentation describing what the system does and where its limits are.",
+          "topic": "documentation",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "workpapers"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "iso-iec-42001",
+              "control_id": "A.8.2",
+              "rationale": "Generated workpapers state each procedure's limitations alongside its result, which feeds the documentation users need about where the system should not be trusted."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "framework": {
+        "schema_version": 1,
+        "id": "nist-ai-rmf",
+        "name": "NIST AI Risk Management Framework",
+        "publication": "NIST AI 100-1, AI RMF 1.0",
+        "partial": true,
+        "ids_verified": "2026-07-27",
+        "note": "Partial catalog. Only subcategories this toolkit can produce technical evidence for are listed; the framework contains many more, and their absence here is not a statement about them. Every summary below is original text written for this project describing what the subcategory addresses. No text from the publication is reproduced -- consult NIST AI 100-1 for the authoritative wording, and re-verify these identifiers against the current edition before relying on them in a report.",
+        "controls": [
+          {
+            "id": "MEASURE 2.5",
+            "summary": "Reliability of the system is measured, and the measures chosen are written down rather than left implicit.",
+            "topic": "reliability"
+          },
+          {
+            "id": "MEASURE 2.6",
+            "summary": "Performance and safety behaviour are monitored while the system is running, so incidents are noticed quickly.",
+            "topic": "monitoring"
+          },
+          {
+            "id": "MEASURE 2.7",
+            "summary": "Security and resilience concerns identified earlier are actually tested, and the results recorded.",
+            "topic": "security"
+          },
+          {
+            "id": "MEASURE 2.8",
+            "summary": "Transparency and accountability risks are examined, including keeping histories and audit logs that let a reviewer trace how an output came about.",
+            "topic": "traceability"
+          },
+          {
+            "id": "MEASURE 2.9",
+            "summary": "The model is validated and its output read in context, rather than taken at face value.",
+            "topic": "validation"
+          },
+          {
+            "id": "MEASURE 2.11",
+            "summary": "Fairness and bias concerns identified earlier are evaluated and the results documented.",
+            "topic": "fairness"
+          },
+          {
+            "id": "MANAGE 4.1",
+            "summary": "The system is monitored after deployment so that problems emerging in service are caught.",
+            "topic": "post-deployment"
+          }
+        ]
+      },
+      "counts": {
+        "tested-with-exceptions": 2,
+        "evidence-present": 3,
+        "tested-pass": 1,
+        "no-evidence": 1
+      },
+      "controls": [
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.5",
+          "summary": "Reliability of the system is measured, and the measures chosen are written down rather than left implicit.",
+          "topic": "reliability",
+          "status": "tested-with-exceptions",
+          "probe_ids": [
+            "output-consistency"
+          ],
+          "capabilities": [],
+          "outcome_counts": {
+            "fail": 1
+          },
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.5",
+              "rationale": "Agreement under paraphrase is a documented reliability measure with a stated method, which is what the subcategory asks for."
+            }
+          ]
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.6",
+          "summary": "Performance and safety behaviour are monitored while the system is running, so incidents are noticed quickly.",
+          "topic": "monitoring",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "drift-monitoring"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.6",
+              "rationale": "Tracks performance over time rather than at a single point, so a degradation after a model change is detected."
+            }
+          ]
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.7",
+          "summary": "Security and resilience concerns identified earlier are actually tested, and the results recorded.",
+          "topic": "security",
+          "status": "tested-pass",
+          "probe_ids": [
+            "injection-resistance"
+          ],
+          "capabilities": [],
+          "outcome_counts": {
+            "pass": 1
+          },
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.7",
+              "rationale": "Provides a recorded test result for a security property, which is what the subcategory asks be evaluated and documented."
+            }
+          ]
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.8",
+          "summary": "Transparency and accountability risks are examined, including keeping histories and audit logs that let a reviewer trace how an output came about.",
+          "topic": "traceability",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "evidence-journal",
+            "workpapers"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.8",
+              "rationale": "A hash-chained log of every probe run, with inputs and outputs retained, is the audit history the subcategory describes keeping."
+            },
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.8",
+              "rationale": "Renders the recorded history into a form a reviewer can actually read and challenge."
+            }
+          ]
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.9",
+          "summary": "The model is validated and its output read in context, rather than taken at face value.",
+          "topic": "validation",
+          "status": "tested-with-exceptions",
+          "probe_ids": [
+            "citation-faithfulness"
+          ],
+          "capabilities": [],
+          "outcome_counts": {
+            "fail": 1
+          },
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MEASURE 2.9",
+              "rationale": "Screens whether output is supported by the sources it was given, which is part of validating the model and reading its output in context."
+            }
+          ]
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MEASURE 2.11",
+          "summary": "Fairness and bias concerns identified earlier are evaluated and the results documented.",
+          "topic": "fairness",
+          "status": "no-evidence",
+          "probe_ids": [],
+          "capabilities": [],
+          "outcome_counts": {},
+          "references": []
+        },
+        {
+          "framework": "nist-ai-rmf",
+          "control_id": "MANAGE 4.1",
+          "summary": "The system is monitored after deployment so that problems emerging in service are caught.",
+          "topic": "post-deployment",
+          "status": "evidence-present",
+          "probe_ids": [],
+          "capabilities": [
+            "drift-monitoring"
+          ],
+          "outcome_counts": {},
+          "references": [
+            {
+              "framework": "nist-ai-rmf",
+              "control_id": "MANAGE 4.1",
+              "rationale": "Re-running a baselined battery and testing the difference for significance is post-deployment monitoring with a defined trigger."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "disclaimer": "A mapping means the procedure produced evidence relevant to the control, never that the control is satisfied. Controls generally require governance, policy, and documentation no test harness supplies. Catalogs are partial: a control's absence is not a statement about it."
+}

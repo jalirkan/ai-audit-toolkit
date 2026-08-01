@@ -1,0 +1,21 @@
+[
+  {
+    "label": "q3-2026",
+    "saved_at": "2026-08-01T04:09:46.200854Z",
+    "note": "Scripted demo endpoint, captured as the reference run.",
+    "run_id": "6061be9acf3a4779",
+    "battery": "baseline-assurance",
+    "outcome": "fail",
+    "fingerprint": {
+      "adapter": "mock",
+      "model": "demo-vendor-assistant",
+      "params": {
+        "temperature": 0.0,
+        "max_tokens": 512,
+        "seed": 0
+      },
+      "system_prompt_hash": null
+    },
+    "schema_version": 1
+  }
+]

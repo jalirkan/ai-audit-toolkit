@@ -76,6 +76,27 @@ no model calls — a planted-signal check of the lexical screen itself. Omit
 `--screen-only` to run the same dataset's questions through the live citation
 probe against an adapter.
 
+**The shipped golden set fails, on purpose.** It contains the failure modes a
+lexical screen cannot handle — correct paraphrase, entity swaps, subtle term
+substitutions — and reports accuracy per category rather than as one number:
+
+```
+    [INCONCLUSIVE] verbatim          1.000 (95% CI [0.676, 1.000], 8/8)
+    [        FAIL] paraphrase        0.000 (95% CI [0.000, 0.324], 0/8)
+    [INCONCLUSIVE] unsourced-number  1.000 (95% CI [0.676, 1.000], 8/8)
+    [INCONCLUSIVE] negation-flip     1.000 (95% CI [0.676, 1.000], 8/8)
+    [        FAIL] entity-swap       0.000 (95% CI [0.000, 0.324], 0/8)
+    [        FAIL] term-swap         0.000 (95% CI [0.000, 0.324], 0/8)
+```
+
+An earlier version of this dataset reported 100% accuracy, because it contained
+only cases the screen handles — it was measuring the dataset, not the method.
+An aggregate over a golden set is a weighted average across whatever mix the
+author wrote, and deleting the hard items would raise it while changing nothing
+real. So the hard items stay, the score is stratified, and the verdict is taken
+per category. Use this to know where the screen can be relied on, not to certify
+it.
+
 `monitor` is the cron-friendly drift wrapper: same comparison as `drift`, plus a
 status JSON (default `runs/monitor-status.json`) and exit code 4 when drift is
 detected. Example crontab (daily 06:00) and Windows Task Scheduler:
@@ -103,6 +124,43 @@ export OPENAI_API_KEY=...           # OPENAI_BASE_URL for a compatible server
 python cli.py run suites/baseline.json --adapter openai
 ```
 
+## Reading the evidence in a browser
+
+```bash
+python serve.py            # http://127.0.0.1:8770, read-only
+```
+
+A local reviewer front end over the same stored evidence: runs index, run
+detail, printable workpapers, the individual model calls behind every finding,
+framework coverage, drift, endpoint comparison, and the journal chain with its
+verification.
+
+It is built to be *argued with*. Every headline result reaches the exact
+prompt, system prompt and response that produced it in two clicks, with the
+evidence hash that ties it to the journal. The signature component is an
+interval plotted against its criterion — whether it clears the line, sits past
+it, or straddles it *is* the pass/fail/inconclusive decision, so the drawing
+shows the reader what the conclusion rests on rather than asking them to take
+it. Inconclusive is drawn as absence — hatched and unfilled — never as a shade
+between pass and fail.
+
+The Python side gains **zero** dependencies: `serve.py` is standard library
+only, binds `127.0.0.1`, serves GET and HEAD and nothing else, and a test
+fails the build if any import resolves into site-packages. The front end lives
+under `web/` with its own npm toolchain, per the workstation rule that
+dependencies belong where rewrites are cheap.
+
+```bash
+cd web && pnpm install && pnpm build   # then python serve.py serves it
+cd web && pnpm dev                     # dev server, proxies /api to serve.py
+cd web && pnpm test                    # 114 tests
+```
+
+Three of those tests carry the thesis rather than coverage: no rate renders
+without its interval and sample size, no view invents an aggregate, and the
+inconclusive treatment is distinguishable from failure by shape as well as
+hue. Each has a companion test proving the check can actually fail.
+
 ## What it does
 
 - **Probe batteries** — repeatable procedures against any endpoint: output
@@ -117,7 +175,9 @@ python cli.py run suites/baseline.json --adapter openai
   Scheduler); there is no built-in daemon or emailer.
 - **Golden RAG harness** — closed-context dataset of sources + labeled gold
   answers for planted-signal checks of the citation screen
-  (`datasets/northwind-rag-golden.json`). Not a retrieval engine.
+  (`datasets/northwind-rag-golden.json`). Deliberately includes the cases the
+  screen gets wrong, and scores per category so they cannot be averaged away.
+  Not a retrieval engine.
 - **Workpaper generation** — procedure, population, criterion, result,
   exceptions, limitations, and conclusion per unit tested, plus a
   management letter with findings ranked by a stated severity rule. Markdown
@@ -139,7 +199,9 @@ none:
 - **The screens are lexical.** There is no semantic model here. Consistency
   clustering, citation support, and canary detection are all token matching.
   Each probe states what that costs, and those statements are rendered into the
-  workpaper next to the result.
+  workpaper next to the result. The citation screen is 0-for-8 on paraphrase,
+  entity swaps, and term swaps in the shipped golden set — measured, not
+  estimated. It does catch invented figures and inverted polarity.
 - **The injection leak rate is a lower bound.** Encoded or acrostic
   exfiltration succeeds without being counted.
 - **The hash chain detects edits, not rewrites.** Anyone who can rewrite the
@@ -175,10 +237,12 @@ frameworks/  control catalogs (original summaries) and coverage mapping
 compare/     one battery across several endpoints, side by side
 rag/         golden-dataset loader and citation-screen harness
 datasets/    shipped golden RAG faithfulness set
-report/      one document model, rendered to Markdown and standalone HTML
+report/      one document model, rendered to Markdown, standalone HTML, and JSON
 suites/      battery specs
 examples/    a generated end-to-end run
 cli.py
+serve.py     read-only localhost API over stored evidence (stdlib only)
+web/         reviewer front end (Vite/React/TS/Tailwind); its own npm toolchain
 tests/       unit tests; the whole suite runs offline with no key
 ```
 
@@ -194,7 +258,9 @@ cannot be trusted in one.
 
 ## Status
 
-Phases 0–6 of [PLAN.md](./PLAN.md) complete. Design decisions worth not
+Phases 0–6 of [PLAN.md](./PLAN.md) complete, plus F0–F4 of
+[FRONTEND-BRIEF.md](./FRONTEND-BRIEF.md) — the read-only API and the reviewer
+front end. 718 Python tests, 114 front-end tests. Design decisions worth not
 relitigating are in [DECISIONS.md](./DECISIONS.md).
 
 *Educational/professional tooling; not a substitute for a qualified audit.*

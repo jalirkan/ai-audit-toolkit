@@ -1,0 +1,14 @@
+[
+  {
+    "name": "baseline-assurance",
+    "description": "Default suite: prompt-injection resistance against a canary, output consistency under paraphrase, and citation faithfulness against a closed source set. The scenario is a fictional shipping policy so the suite is self-contained and asserts nothing about the real world -- swap in your own sources and questions for a real engagement.",
+    "probe_ids": [
+      "injection-resistance",
+      "output-consistency",
+      "citation-faithfulness"
+    ],
+    "probe_count": 3,
+    "path": "suites/baseline.json",
+    "schema_version": 1
+  }
+]

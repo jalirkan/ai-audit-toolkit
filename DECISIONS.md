@@ -406,3 +406,169 @@ monitor` re-runs a suite against a saved baseline (same comparison as `drift`),
 writes a machine-readable status JSON, and exits `EXIT_DRIFT` when
 `has_drift` is true. Cron or Task Scheduler owns the schedule and the alert
 channel; this toolkit does not daemonize, mail, or page.
+
+## D-040 · 2026-07-28 · The citation screen checks polarity explicitly
+*Amends D-015, which described the screen as pure token overlap.*
+
+Negation words are stopwords. That is right for similarity — "the cat sat" and
+"the cat did not sit" concern the same subject — and it is the worst possible
+default for a *support* check, because a claim and its exact negation then
+match the same source equally well. "Northwind does ship hazardous materials"
+scored as fully supported against a source stating it does **not**.
+
+For a control that exists to catch fabricated claims about policy, silently
+passing an inverted safety statement is the highest-consequence error available
+to it. `assess_claim` now compares the polarity of the claim against the source
+it matched, and only where coverage would otherwise have passed — a
+low-coverage sentence is already unsupported and should say so for that reason.
+Measured on the golden dataset, negation flips caught went from 2 of 8 to 8 of
+8, with no new false positives on legitimately negated claims.
+
+`is_negated` is coarse: it detects that a negation is present, not what it
+scopes over, so a sentence that negates one clause and asserts another reads as
+negated throughout. Documented rather than hidden. The alternative — ignoring
+polarity — is not a more conservative choice, it is a wrong one.
+
+## D-041 · 2026-07-28 · A golden dataset must contain the method's blind spots
+*Amends D-038, which established the harness but not what belongs in it.*
+
+The shipped dataset reported **100% screen accuracy, zero false positives, zero
+false negatives**. The same screen, put to six realistic cases drawn from the
+failure modes `probes/citation.py` already documented, got **none of them
+right**. The dataset was composed almost entirely of near-verbatim answers and
+answers containing invented numbers — the two things a lexical screen trivially
+handles. It was measuring the dataset, not the method, and it produced a
+confident figure while doing so. That is worse than having no harness at all.
+
+Two rules follow.
+
+**The dataset carries the cases the method fails.** Paraphrase, entity swap,
+and term swap are in it, labelled `known_screen_miss`, and they stay there.
+Deleting them would raise the headline number and change nothing real. An item
+that fails *without* being marked as a known blind spot is surfaced separately
+as a surprise, because that is new information about the screen.
+
+**Accuracy is reported per category and decided per category.** An aggregate
+over a golden dataset is a weighted average across whatever mix the author
+wrote, movable at will by adding easy items. Per-category accuracy is not, and
+the rollup is by precedence exactly as a battery is (D-016): fail if any
+category fails. The overall figure is still shown, labelled as
+composition-dependent, so a reader who wants one number gets one with the
+warning attached.
+
+The shipped dataset now reads: 1.000 on verbatim, unsourced-number,
+negation-flip, abstention, and off-topic; **0.000 on paraphrase, entity-swap,
+and term-swap**; overall FAIL. That is the truth about a lexical screen, and it
+is what the workpapers should have been saying all along.
+
+The per-stratum minimum sample is 8 rather than 20: a category the screen
+cannot do at all fails decisively at 0/8 (upper bound near 0.32), while 8/8
+still reads inconclusive, so the harness will not certify a category from a
+handful of easy examples.
+
+## D-042 · 2026-07-31 · The comparison payload carries its measurements
+*Amends D-036, which established the "not distinguished" list but serialized
+only its names.*
+
+`ComparisonMatrix.to_dict()` reported which metrics failed to separate the
+endpoints as bare `{probe_id, unit, metric}` triples. The intervals that
+produced that judgment were dropped. Found while specifying the read API: the
+one screen that best expresses D-036 — overlapping intervals drawn together on
+a shared scale — could not be built from the payload that D-036 exists to
+produce.
+
+A consumer told only that `leak_rate` did not separate two endpoints has to
+take it on faith. Shown 0.091 (95% CI [0.025, 0.278]) against 0.000 (95% CI
+[0.000, 0.149]) on one axis, a reader sees *why* the run did not distinguish
+them, and can disagree. The second is the whole point; the first is an
+assertion.
+
+`to_dict` now emits `metric_rows`, each carrying every endpoint's full
+`Measurement` plus `all_overlap` and the overlapping labels.
+`undistinguished_metrics` keeps its original shape, so the change is purely
+additive and no existing consumer breaks.
+
+The alternative considered and rejected was letting the client recompute
+overlap from the run payloads. It needs no Python change, and it would put the
+rule that decides what a run did and did not establish into a second language
+where it can drift. `overlapping_labels()` stays the single home, and a test
+asserts `metric_rows` and `undistinguished_metrics` never disagree.
+
+## D-043 · 2026-07-31 · The web front end reads through a stdlib, loopback, read-only API
+`serve.py` exposes stored evidence over HTTP so a reviewer can drill from a
+headline result to the model call behind it. Four properties are structural
+rather than policy, because each one is a place this could quietly stop being
+audit tooling.
+
+**Read-only by construction.** Only GET and HEAD are dispatched; there is no
+write handler to guard, and unsupported methods fall through to the stdlib's
+501. Running a battery costs money against a real endpoint, and a browser is
+the wrong place to decide to spend it. `POST /api/runs` is deferred to a phase
+that has to argue for itself, not disabled behind a flag someone can flip.
+
+**Payloads are the engine's own `to_dict()` output, byte for byte.** Those
+shapes are versioned and covered by the existing suite; reshaping them at the
+boundary would create a second, untested contract that drifts from the first.
+A test asserts the run payload equals the stored file exactly. The one
+projection is the runs index, which exists so listing runs does not ship every
+trial of every run, and it carries outcome counts rather than anything
+resembling a summary figure. Where the engine has no serializer —
+`VerificationResult`, `JournalEntry` — this module defines one, because there
+is nothing to preserve.
+
+**Schema versions travel in a header.** `Evidence` and `BatteryResult` carry
+`schema_version` in the payload; `CoverageReport`, `DriftReport`, and
+`ComparisonMatrix` do not. Wrapping every response in an envelope to fix that
+would reshape the payloads, so the version map goes in `X-Engine-Schema` and
+in `/api/meta`, and the client refuses what it cannot read — the same stance
+`Evidence.from_dict` takes.
+
+**No parameter reaches a path.** Run ids match the exact 16-hex form
+`make_run_id` produces, baseline labels reuse `validate_label`, and suites and
+datasets are resolved by enumerating their directory and matching a basename.
+Traversal is not filtered or escaped; it is unrepresentable, because no
+supplied string is ever joined to a `Path`. Tested with the encoded, absolute,
+and null-byte variants rather than the obvious one.
+
+Two carried obligations are enforced at the boundary rather than left to the
+views: coverage responses always carry the D-027 disclaimer, and verification
+responses always carry the D-017 limitation, so no client can render a green
+tick without the sentence that qualifies it.
+
+There is no authentication and none is wanted. The server binds `127.0.0.1`
+and refuses to bind anything else, so reaching it already requires code
+execution on the machine holding the evidence. A login form in front of a file
+the user can open with `cat` is theatre, and tooling that performs security it
+does not have is worse than tooling that states its boundary.
+
+D-001 gets an executable guard: a test parses `serve.py`'s imports and fails if
+any resolves into site-packages. A dependency added to the Python side would
+take the engine's zero-install guarantee with it, and that is too important to
+leave to a reviewer noticing a diff.
+
+## D-044 · 2026-08-01 · The workpaper gets a third renderer, not a second implementation
+*Extends D-029, which established one document model with two renderers.*
+
+The web workpaper renders `report/document.py`'s block structure, served as
+JSON by `/api/runs/:id/workpaper`. It is a third renderer over the model
+`build_workpapers` already produces, not a React reimplementation of what a
+workpaper contains.
+
+D-029's argument was that converting Markdown into HTML would let the two
+outputs drift apart in content. The argument is stronger for a third surface:
+the workpaper a reviewer reads on screen and the one they print must be the
+same document, or the tool has two accounts of the same evidence. With one
+model they cannot diverge — a section missing from the screen is missing from
+the Markdown too, and a test asserts the sections are all present.
+
+The deciding constraint was the evidence hash. `Evidence.content_hash()` is
+computed over canonical JSON (D-009) and is not carried in the payload.
+Recomputing it in the browser would mean reimplementing `core.canonical` in
+TypeScript, where a disagreement about key ordering or separators yields a
+hash that is wrong but looks right — the worst available failure for the one
+field whose entire job is tying a finding to the journal. The server computes
+it, because the server is where the canonical encoder lives.
+
+The endpoint also passes the current journal head into the document, so a
+printed workpaper carries the value a reviewer would anchor (D-017). Absent
+when no journal exists, rather than faked.
