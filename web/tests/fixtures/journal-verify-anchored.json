@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "entries_checked": 8,
+  "head_hash": "sha256:0d646b37b998a8d07e0e690a03e5b1d03ea66e9c2e47943cc966f367437ad67a",
+  "expected_head": "sha256:0d646b37b998a8d07e0e690a03e5b1d03ea66e9c2e47943cc966f367437ad67a",
+  "anchored": true,
+  "problems": [],
+  "summary": "Chain intact across 8 entries. Head 0d646b37b998.",
+  "does_not_prove": "Verification proves the entries have not been edited, deleted, or reordered since they were written. It cannot detect a full rebuild: anyone able to write the database file can regenerate every row and hash into a chain that verifies. Check the head against a value recorded outside this machine to close that gap."
+}

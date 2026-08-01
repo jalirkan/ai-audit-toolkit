@@ -465,3 +465,83 @@ The per-stratum minimum sample is 8 rather than 20: a category the screen
 cannot do at all fails decisively at 0/8 (upper bound near 0.32), while 8/8
 still reads inconclusive, so the harness will not certify a category from a
 handful of easy examples.
+
+## D-042 · 2026-07-31 · The comparison payload carries its measurements
+*Amends D-036, which established the "not distinguished" list but serialized
+only its names.*
+
+`ComparisonMatrix.to_dict()` reported which metrics failed to separate the
+endpoints as bare `{probe_id, unit, metric}` triples. The intervals that
+produced that judgment were dropped. Found while specifying the read API: the
+one screen that best expresses D-036 — overlapping intervals drawn together on
+a shared scale — could not be built from the payload that D-036 exists to
+produce.
+
+A consumer told only that `leak_rate` did not separate two endpoints has to
+take it on faith. Shown 0.091 (95% CI [0.025, 0.278]) against 0.000 (95% CI
+[0.000, 0.149]) on one axis, a reader sees *why* the run did not distinguish
+them, and can disagree. The second is the whole point; the first is an
+assertion.
+
+`to_dict` now emits `metric_rows`, each carrying every endpoint's full
+`Measurement` plus `all_overlap` and the overlapping labels.
+`undistinguished_metrics` keeps its original shape, so the change is purely
+additive and no existing consumer breaks.
+
+The alternative considered and rejected was letting the client recompute
+overlap from the run payloads. It needs no Python change, and it would put the
+rule that decides what a run did and did not establish into a second language
+where it can drift. `overlapping_labels()` stays the single home, and a test
+asserts `metric_rows` and `undistinguished_metrics` never disagree.
+
+## D-043 · 2026-07-31 · The web front end reads through a stdlib, loopback, read-only API
+`serve.py` exposes stored evidence over HTTP so a reviewer can drill from a
+headline result to the model call behind it. Four properties are structural
+rather than policy, because each one is a place this could quietly stop being
+audit tooling.
+
+**Read-only by construction.** Only GET and HEAD are dispatched; there is no
+write handler to guard, and unsupported methods fall through to the stdlib's
+501. Running a battery costs money against a real endpoint, and a browser is
+the wrong place to decide to spend it. `POST /api/runs` is deferred to a phase
+that has to argue for itself, not disabled behind a flag someone can flip.
+
+**Payloads are the engine's own `to_dict()` output, byte for byte.** Those
+shapes are versioned and covered by the existing suite; reshaping them at the
+boundary would create a second, untested contract that drifts from the first.
+A test asserts the run payload equals the stored file exactly. The one
+projection is the runs index, which exists so listing runs does not ship every
+trial of every run, and it carries outcome counts rather than anything
+resembling a summary figure. Where the engine has no serializer —
+`VerificationResult`, `JournalEntry` — this module defines one, because there
+is nothing to preserve.
+
+**Schema versions travel in a header.** `Evidence` and `BatteryResult` carry
+`schema_version` in the payload; `CoverageReport`, `DriftReport`, and
+`ComparisonMatrix` do not. Wrapping every response in an envelope to fix that
+would reshape the payloads, so the version map goes in `X-Engine-Schema` and
+in `/api/meta`, and the client refuses what it cannot read — the same stance
+`Evidence.from_dict` takes.
+
+**No parameter reaches a path.** Run ids match the exact 16-hex form
+`make_run_id` produces, baseline labels reuse `validate_label`, and suites and
+datasets are resolved by enumerating their directory and matching a basename.
+Traversal is not filtered or escaped; it is unrepresentable, because no
+supplied string is ever joined to a `Path`. Tested with the encoded, absolute,
+and null-byte variants rather than the obvious one.
+
+Two carried obligations are enforced at the boundary rather than left to the
+views: coverage responses always carry the D-027 disclaimer, and verification
+responses always carry the D-017 limitation, so no client can render a green
+tick without the sentence that qualifies it.
+
+There is no authentication and none is wanted. The server binds `127.0.0.1`
+and refuses to bind anything else, so reaching it already requires code
+execution on the machine holding the evidence. A login form in front of a file
+the user can open with `cat` is theatre, and tooling that performs security it
+does not have is worse than tooling that states its boundary.
+
+D-001 gets an executable guard: a test parses `serve.py`'s imports and fails if
+any resolves into site-packages. A dependency added to the Python side would
+take the engine's zero-install guarantee with it, and that is too important to
+leave to a reviewer noticing a diff.

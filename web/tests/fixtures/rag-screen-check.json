@@ -1,0 +1,1255 @@
+{
+  "dataset_id": "northwind-rag-golden",
+  "outcome": "fail",
+  "decision": {
+    "outcome": "fail",
+    "rationale": "The screen fails on 3 of 8 categories (paraphrase, entity-swap, term-swap). Judged per category rather than on the aggregate, which would average a category the screen cannot do into ones it can.",
+    "rule": "interval",
+    "threshold": 0.9,
+    "direction": "higher_is_better"
+  },
+  "accuracy": {
+    "name": "screen_accuracy",
+    "kind": "proportion",
+    "value": 0.5714285714285714,
+    "n": 56,
+    "ci_low": 0.4413762073081303,
+    "ci_high": 0.6923103731606176,
+    "ci_method": "wilson",
+    "confidence": 0.95,
+    "successes": 32,
+    "method_note": "Share of planted gold answers where the citation screen's faithful/unfaithful call matched the dataset label. The screen is lexical; this checks the screen against known cases, not a model.",
+    "direction": "higher_is_better"
+  },
+  "true_positives": {
+    "name": "true_positives",
+    "kind": "count",
+    "value": 20.0,
+    "n": 56,
+    "ci_low": null,
+    "ci_high": null,
+    "ci_method": "none",
+    "confidence": null,
+    "successes": null,
+    "method_note": "Confusion counts treating 'unfaithful' as the positive class. Reported as tallies, not combined into a composite score.",
+    "direction": "neutral"
+  },
+  "true_negatives": {
+    "name": "true_negatives",
+    "kind": "count",
+    "value": 12.0,
+    "n": 56,
+    "ci_low": null,
+    "ci_high": null,
+    "ci_method": "none",
+    "confidence": null,
+    "successes": null,
+    "method_note": "Confusion counts treating 'unfaithful' as the positive class. Reported as tallies, not combined into a composite score.",
+    "direction": "neutral"
+  },
+  "false_positives": {
+    "name": "false_positives",
+    "kind": "count",
+    "value": 8.0,
+    "n": 56,
+    "ci_low": null,
+    "ci_high": null,
+    "ci_method": "none",
+    "confidence": null,
+    "successes": null,
+    "method_note": "Confusion counts treating 'unfaithful' as the positive class. Reported as tallies, not combined into a composite score.",
+    "direction": "neutral"
+  },
+  "false_negatives": {
+    "name": "false_negatives",
+    "kind": "count",
+    "value": 16.0,
+    "n": 56,
+    "ci_low": null,
+    "ci_high": null,
+    "ci_method": "none",
+    "confidence": null,
+    "successes": null,
+    "method_note": "Confusion counts treating 'unfaithful' as the positive class. Reported as tallies, not combined into a composite score.",
+    "direction": "neutral"
+  },
+  "strata": [
+    {
+      "category": "verbatim",
+      "outcome": "inconclusive",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 1.0,
+        "n": 8,
+        "ci_low": 0.6755924351161198,
+        "ci_high": 1.0,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 8,
+        "method_note": "Screen accuracy restricted to 'verbatim' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The interval for screen_accuracy straddles the required minimum of 0.900, so the sample does not settle the question: 1.000 (95% CI [0.676, 1.000], 8/8). More trials are required.",
+      "items": [
+        {
+          "item_id": "v-tiers",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-standard-window",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-priority-window",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-priority-surcharge",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-overnight-radius",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-claim-window",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-no-hazmat",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "v-no-animals",
+          "category": "verbatim",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        }
+      ]
+    },
+    {
+      "category": "paraphrase",
+      "outcome": "fail",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 0.0,
+        "n": 8,
+        "ci_low": 0.0,
+        "ci_high": 0.3244075648838801,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 0,
+        "method_note": "Screen accuracy restricted to 'paraphrase' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The whole interval for screen_accuracy lies below the required minimum of 0.900: 0.000 (95% CI [0.000, 0.324], 0/8).",
+      "items": [
+        {
+          "item_id": "p-standard-week",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-priority-quick",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-surcharge-words",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-overnight-near-hub",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-claim-fortnight",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-three-levels",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-livestock",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "p-dangerous-goods",
+          "category": "paraphrase",
+          "expect": "faithful",
+          "flagged_unfaithful": true,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 1
+        }
+      ]
+    },
+    {
+      "category": "abstention",
+      "outcome": "inconclusive",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 1.0,
+        "n": 4,
+        "ci_low": 0.5101091635454027,
+        "ci_high": 1.0,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 4,
+        "method_note": "Screen accuracy restricted to 'abstention' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The interval for screen_accuracy straddles the required minimum of 0.900, so the sample does not settle the question: 1.000 (95% CI [0.510, 1.000], 4/4). More trials are required.",
+      "items": [
+        {
+          "item_id": "a-no-info",
+          "category": "abstention",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "a-not-stated",
+          "category": "abstention",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "a-cannot-determine",
+          "category": "abstention",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "a-no-information",
+          "category": "abstention",
+          "expect": "faithful",
+          "flagged_unfaithful": false,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 0
+        }
+      ]
+    },
+    {
+      "category": "unsourced-number",
+      "outcome": "inconclusive",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 1.0,
+        "n": 8,
+        "ci_low": 0.6755924351161198,
+        "ci_high": 1.0,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 8,
+        "method_note": "Screen accuracy restricted to 'unsourced-number' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The interval for screen_accuracy straddles the required minimum of 0.900, so the sample does not settle the question: 1.000 (95% CI [0.676, 1.000], 8/8). More trials are required.",
+      "items": [
+        {
+          "item_id": "n-standard-days",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-surcharge",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-overnight-radius",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-claim-window",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-same-day",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-hub-count",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-priority-days",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "n-tier-count",
+          "category": "unsourced-number",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        }
+      ]
+    },
+    {
+      "category": "negation-flip",
+      "outcome": "inconclusive",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 1.0,
+        "n": 8,
+        "ci_low": 0.6755924351161198,
+        "ci_high": 1.0,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 8,
+        "method_note": "Screen accuracy restricted to 'negation-flip' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The interval for screen_accuracy straddles the required minimum of 0.900, so the sample does not settle the question: 1.000 (95% CI [0.676, 1.000], 8/8). More trials are required.",
+      "items": [
+        {
+          "item_id": "f-hazmat-allowed",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-animals-allowed",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-overnight-unrestricted",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-no-surcharge",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-claim-optional",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-standard-not-quoted",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-no-three-tiers",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "f-hazmat-permitted",
+          "category": "negation-flip",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        }
+      ]
+    },
+    {
+      "category": "entity-swap",
+      "outcome": "fail",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 0.0,
+        "n": 8,
+        "ci_low": 0.0,
+        "ci_high": 0.3244075648838801,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 0,
+        "method_note": "Screen accuracy restricted to 'entity-swap' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The whole interval for screen_accuracy lies below the required minimum of 0.900: 0.000 (95% CI [0.000, 0.324], 0/8).",
+      "items": [
+        {
+          "item_id": "e-priority-radius",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-standard-surcharge",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-overnight-slow",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-standard-fast",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-lost-goods",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-priority-slow",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-standard-radius",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "e-overnight-surcharge",
+          "category": "entity-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        }
+      ]
+    },
+    {
+      "category": "term-swap",
+      "outcome": "fail",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 0.0,
+        "n": 8,
+        "ci_low": 0.0,
+        "ci_high": 0.3244075648838801,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 0,
+        "method_note": "Screen accuracy restricted to 'term-swap' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The whole interval for screen_accuracy lies below the required minimum of 0.900: 0.000 (95% CI [0.000, 0.324], 0/8).",
+      "items": [
+        {
+          "item_id": "t-claim-shipment",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-calendar-days",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-business-weeks",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-may-file",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-guaranteed",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-per-item",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-requires-tiers",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        },
+        {
+          "item_id": "t-outside-contiguous",
+          "category": "term-swap",
+          "expect": "unfaithful",
+          "flagged_unfaithful": false,
+          "correct": false,
+          "known_screen_miss": true,
+          "unsupported_count": 0
+        }
+      ]
+    },
+    {
+      "category": "off-topic",
+      "outcome": "inconclusive",
+      "accuracy": {
+        "name": "screen_accuracy",
+        "kind": "proportion",
+        "value": 1.0,
+        "n": 4,
+        "ci_low": 0.5101091635454027,
+        "ci_high": 1.0,
+        "ci_method": "wilson",
+        "confidence": 0.95,
+        "successes": 4,
+        "method_note": "Screen accuracy restricted to 'off-topic' items. Unlike the overall figure, this cannot be raised by adding easier cases of a different kind.",
+        "direction": "higher_is_better"
+      },
+      "rationale": "The interval for screen_accuracy straddles the required minimum of 0.900, so the sample does not settle the question: 1.000 (95% CI [0.510, 1.000], 4/4). More trials are required.",
+      "items": [
+        {
+          "item_id": "o-ceo",
+          "category": "off-topic",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "o-founding",
+          "category": "off-topic",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "o-solar",
+          "category": "off-topic",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        },
+        {
+          "item_id": "o-satisfaction",
+          "category": "off-topic",
+          "expect": "unfaithful",
+          "flagged_unfaithful": true,
+          "correct": true,
+          "known_screen_miss": false,
+          "unsupported_count": 1
+        }
+      ]
+    }
+  ],
+  "failing_categories": [
+    "paraphrase",
+    "entity-swap",
+    "term-swap"
+  ],
+  "items": [
+    {
+      "item_id": "v-tiers",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-standard-window",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-priority-window",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-priority-surcharge",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-overnight-radius",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-claim-window",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-no-hazmat",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "v-no-animals",
+      "category": "verbatim",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "p-standard-week",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-priority-quick",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-surcharge-words",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-overnight-near-hub",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-claim-fortnight",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-three-levels",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-livestock",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "p-dangerous-goods",
+      "category": "paraphrase",
+      "expect": "faithful",
+      "flagged_unfaithful": true,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "a-no-info",
+      "category": "abstention",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "a-not-stated",
+      "category": "abstention",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "a-cannot-determine",
+      "category": "abstention",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "a-no-information",
+      "category": "abstention",
+      "expect": "faithful",
+      "flagged_unfaithful": false,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "n-standard-days",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-surcharge",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-overnight-radius",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-claim-window",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-same-day",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-hub-count",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-priority-days",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "n-tier-count",
+      "category": "unsourced-number",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-hazmat-allowed",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-animals-allowed",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-overnight-unrestricted",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-no-surcharge",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-claim-optional",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-standard-not-quoted",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-no-three-tiers",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "f-hazmat-permitted",
+      "category": "negation-flip",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "e-priority-radius",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-standard-surcharge",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-overnight-slow",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-standard-fast",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-lost-goods",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-priority-slow",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-standard-radius",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "e-overnight-surcharge",
+      "category": "entity-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-claim-shipment",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-calendar-days",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-business-weeks",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-may-file",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-guaranteed",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-per-item",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-requires-tiers",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "t-outside-contiguous",
+      "category": "term-swap",
+      "expect": "unfaithful",
+      "flagged_unfaithful": false,
+      "correct": false,
+      "known_screen_miss": true,
+      "unsupported_count": 0
+    },
+    {
+      "item_id": "o-ceo",
+      "category": "off-topic",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "o-founding",
+      "category": "off-topic",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "o-solar",
+      "category": "off-topic",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    },
+    {
+      "item_id": "o-satisfaction",
+      "category": "off-topic",
+      "expect": "unfaithful",
+      "flagged_unfaithful": true,
+      "correct": true,
+      "known_screen_miss": false,
+      "unsupported_count": 1
+    }
+  ],
+  "started_at": "2026-08-01T03:20:29.381915Z",
+  "finished_at": "2026-08-01T03:20:29.389927Z"
+}
