@@ -21,6 +21,9 @@ import runB from "./fixtures/run-6061be9acf3a4779.json";
 import runsIndexFixture from "./fixtures/runs-index.json";
 import wpA from "./fixtures/workpaper-d51a4ffee83b0707.json";
 import wpB from "./fixtures/workpaper-6061be9acf3a4779.json";
+import comparisonFixture from "./fixtures/comparison.json";
+import driftFixture from "./fixtures/drift.json";
+import coverageFixture from "./fixtures/coverage-d51a4ffee83b0707.json";
 
 import { IntervalMark, IntervalRow } from "../src/design/Interval";
 import { OutcomeTag } from "../src/design/Outcome";
@@ -29,6 +32,14 @@ import { RunsIndex } from "../src/views/RunsIndex";
 import { TrialDetail } from "../src/views/TrialDetail";
 import { Workpaper } from "../src/views/Workpaper";
 import { parseDocument } from "../src/api/document";
+import { Comparison } from "../src/views/Comparison";
+import { Coverage } from "../src/views/Coverage";
+import { Drift } from "../src/views/Drift";
+import type {
+  ComparisonPayload,
+  CoveragePayload,
+  DriftPayload,
+} from "../src/api/comparison";
 import { parseBatteryResult } from "../src/api/schema";
 import type { Measurement, RunSummary } from "../src/api/schema";
 
@@ -44,6 +55,9 @@ const papers = [wpA, wpB].map(parseDocument);
 const scriptedPaper = papers.find((d) =>
   JSON.stringify(d).includes("demo-vendor-assistant"),
 )!;
+const matrix = comparisonFixture as unknown as ComparisonPayload;
+const driftReport = driftFixture as unknown as DriftPayload;
+const coverage = coverageFixture as unknown as CoveragePayload;
 
 /** A percentage, as the Python scan defines one. */
 const PERCENT = /\d+(?:\.\d+)?\s*%/;
@@ -166,6 +180,21 @@ describe("1. no bare rates", () => {
     }
   });
 
+  it("holds on the comparison, including the undistinguished section", () => {
+    const { container } = render(<Comparison matrix={matrix} />);
+    assertNoBareRates(container, "comparison");
+  });
+
+  it("holds on the drift report", () => {
+    const { container } = render(<Drift report={driftReport} />);
+    assertNoBareRates(container, "drift");
+  });
+
+  it("holds on the coverage view", () => {
+    const { container } = render(<Coverage coverage={coverage} />);
+    assertNoBareRates(container, "coverage");
+  });
+
   it("holds on the runs index", () => {
     const { container } = render(<RunsIndex runs={runs} onSelect={() => {}} />);
     assertNoBareRates(container, "runs index");
@@ -260,6 +289,9 @@ describe("2. no invented aggregate", () => {
           <TrialDetail evidence={scripted.evidence[0]!} onBack={() => {}} />,
         ),
     ],
+    ["comparison", () => render(<Comparison matrix={matrix} />)],
+    ["drift", () => render(<Drift report={driftReport} />)],
+    ["coverage", () => render(<Coverage coverage={coverage} />)],
   ])("%s asserts no aggregate figure", (label, mount) => {
     const { container } = mount();
     const text = assertedText(container);

@@ -138,11 +138,13 @@ export function RunDetail({
   run,
   onBack,
   onOpenWorkpaper,
+  onOpenCoverage,
   onOpenTrials,
 }: {
   run: BatteryResult;
   onBack: () => void;
   onOpenWorkpaper?: () => void;
+  onOpenCoverage?: () => void;
   onOpenTrials?: (unit: number) => void;
 }) {
   return (
@@ -181,16 +183,26 @@ export function RunDetail({
           <OutcomeTag outcome={run.outcome} showMeaning />
         </div>
 
-        {onOpenWorkpaper && (
-          <button
-            className="mt-5 border border-rule px-3 py-1.5 text-xs uppercase tracking-wider text-ink-soft hover:border-rule-strong hover:text-ink"
-            onClick={onOpenWorkpaper}
-            data-print="hide"
-            data-testid="open-workpaper"
-          >
-            Open workpaper
-          </button>
-        )}
+        <div className="mt-5 flex flex-wrap gap-3" data-print="hide">
+          {onOpenWorkpaper && (
+            <button
+              className="border border-rule px-3 py-1.5 text-xs uppercase tracking-wider text-ink-soft hover:border-rule-strong hover:text-ink"
+              onClick={onOpenWorkpaper}
+              data-testid="open-workpaper"
+            >
+              Open workpaper
+            </button>
+          )}
+          {onOpenCoverage && (
+            <button
+              className="border border-rule px-3 py-1.5 text-xs uppercase tracking-wider text-ink-soft hover:border-rule-strong hover:text-ink"
+              onClick={onOpenCoverage}
+              data-testid="open-coverage"
+            >
+              Framework coverage
+            </button>
+          )}
+        </div>
 
         <div className="mt-5">
           <Caveat>

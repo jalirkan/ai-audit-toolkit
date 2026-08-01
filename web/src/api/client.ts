@@ -12,6 +12,11 @@
  */
 
 import { type DocumentModel, parseDocument } from "./document";
+import type {
+  ComparisonPayload,
+  CoveragePayload,
+  DriftPayload,
+} from "./comparison";
 import {
   type BatteryResult,
   type ProbeInfo,
@@ -74,10 +79,27 @@ export const api = {
     const query = capabilities.length
       ? `?capabilities=${encodeURIComponent(capabilities.join(","))}`
       : "";
-    return request<Record<string, unknown>>(
+    return request<CoveragePayload>(
       `/api/runs/${runId}/coverage${query}`,
       signal,
     );
+  },
+
+  baselines: (signal?: AbortSignal) =>
+    request<
+      { label: string; saved_at: string; note: string; run_id: string; battery: string }[]
+    >("/api/baselines", signal),
+
+  drift: (baseline: string, runId: string, signal?: AbortSignal) =>
+    request<DriftPayload>(
+      `/api/drift?baseline=${encodeURIComponent(baseline)}&run=${encodeURIComponent(runId)}`,
+      signal,
+    ),
+
+  comparison: (runIds: string[], labels: string[] = [], signal?: AbortSignal) => {
+    const params = new URLSearchParams({ runs: runIds.join(",") });
+    if (labels.length) params.set("labels", labels.join(","));
+    return request<ComparisonPayload>(`/api/comparison?${params}`, signal);
   },
 
   workpaper: async (

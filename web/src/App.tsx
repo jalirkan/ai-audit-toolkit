@@ -1,41 +1,66 @@
 /**
  * Shell and routing.
  *
- * Hash routing, hand-rolled. Four views do not earn a router dependency, and
- * the workstation rule is that dependencies go where rewrites are cheap --
+ * Hash routing, hand-rolled. The view set does not earn a router dependency,
+ * and the workstation rule is that dependencies go where rewrites are cheap --
  * this is cheap to replace the moment it stops being enough.
  */
 
 import { useEffect, useState } from "react";
 import { ApiError, api } from "./api/client";
 import type { DocumentModel } from "./api/document";
+import type {
+  ComparisonPayload,
+  CoveragePayload,
+  DriftPayload,
+} from "./api/comparison";
 import type { BatteryResult, RunSummary } from "./api/schema";
+import { Comparison } from "./views/Comparison";
+import { Coverage } from "./views/Coverage";
+import { Drift } from "./views/Drift";
 import { RunDetail } from "./views/RunDetail";
 import { RunsIndex } from "./views/RunsIndex";
 import { TrialDetail } from "./views/TrialDetail";
 import { Workpaper } from "./views/Workpaper";
 
+const ID = "([0-9a-f]{16})";
+
 type Route =
   | { name: "runs" }
   | { name: "run"; runId: string }
   | { name: "workpaper"; runId: string }
-  | { name: "trials"; runId: string; unit: number };
+  | { name: "coverage"; runId: string }
+  | { name: "trials"; runId: string; unit: number }
+  | { name: "drift"; runId: string; baseline: string }
+  | { name: "compare"; runs: string[] };
 
 function parseRoute(hash: string): Route {
-  const workpaper = hash.match(/^#\/runs\/([0-9a-f]{16})\/workpaper$/);
-  if (workpaper) return { name: "workpaper", runId: workpaper[1]! };
-  const trials = hash.match(/^#\/runs\/([0-9a-f]{16})\/trials\/(\d+)$/);
-  if (trials) return { name: "trials", runId: trials[1]!, unit: Number(trials[2]) };
-  const run = hash.match(/^#\/runs\/([0-9a-f]{16})$/);
-  if (run) return { name: "run", runId: run[1]! };
+  let m: RegExpMatchArray | null;
+  if ((m = hash.match(new RegExp(`^#/runs/${ID}/workpaper$`))))
+    return { name: "workpaper", runId: m[1]! };
+  if ((m = hash.match(new RegExp(`^#/runs/${ID}/coverage$`))))
+    return { name: "coverage", runId: m[1]! };
+  if ((m = hash.match(new RegExp(`^#/runs/${ID}/trials/(\\d+)$`))))
+    return { name: "trials", runId: m[1]!, unit: Number(m[2]) };
+  if ((m = hash.match(new RegExp(`^#/runs/${ID}/drift/([A-Za-z0-9._-]{1,64})$`))))
+    return { name: "drift", runId: m[1]!, baseline: m[2]! };
+  if ((m = hash.match(new RegExp(`^#/compare/${ID}/${ID}$`))))
+    return { name: "compare", runs: [m[1]!, m[2]!] };
+  if ((m = hash.match(new RegExp(`^#/runs/${ID}$`))))
+    return { name: "run", runId: m[1]! };
   return { name: "runs" };
 }
+
+const CAPABILITIES = ["evidence-journal", "drift-monitoring", "workpapers"];
 
 export function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
   const [runs, setRuns] = useState<RunSummary[] | null>(null);
   const [run, setRun] = useState<BatteryResult | null>(null);
   const [workpaper, setWorkpaper] = useState<DocumentModel | null>(null);
+  const [coverage, setCoverage] = useState<CoveragePayload | null>(null);
+  const [drift, setDrift] = useState<DriftPayload | null>(null);
+  const [matrix, setMatrix] = useState<ComparisonPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,43 +72,41 @@ export function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
+  const fail = (e: unknown) =>
+    setError(e instanceof Error ? e.message : String(e));
+
   useEffect(() => {
-    const controller = new AbortController();
-    api
-      .runs(controller.signal)
-      .then(setRuns)
-      .catch((e) => {
-        if (e instanceof ApiError) setError(e.message);
-      });
-    return () => controller.abort();
+    const c = new AbortController();
+    api.runs(c.signal).then(setRuns).catch((e) => {
+      if (e instanceof ApiError) setError(e.message);
+    });
+    return () => c.abort();
   }, []);
 
   const runId = "runId" in route ? route.runId : null;
 
   useEffect(() => {
-    if (!runId) {
-      setRun(null);
-      return;
-    }
-    const controller = new AbortController();
-    api
-      .run(runId, controller.signal)
-      .then(setRun)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-    return () => controller.abort();
+    if (!runId) return void setRun(null);
+    const c = new AbortController();
+    api.run(runId, c.signal).then(setRun).catch(fail);
+    return () => c.abort();
   }, [runId]);
 
   useEffect(() => {
-    if (route.name !== "workpaper") {
-      setWorkpaper(null);
-      return;
-    }
-    const controller = new AbortController();
-    api
-      .workpaper(route.runId, ["evidence-journal", "workpapers"], controller.signal)
-      .then(setWorkpaper)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-    return () => controller.abort();
+    const c = new AbortController();
+    if (route.name === "workpaper") {
+      api.workpaper(route.runId, CAPABILITIES, c.signal).then(setWorkpaper).catch(fail);
+    } else setWorkpaper(null);
+    if (route.name === "coverage") {
+      api.coverage(route.runId, CAPABILITIES, c.signal).then(setCoverage).catch(fail);
+    } else setCoverage(null);
+    if (route.name === "drift") {
+      api.drift(route.baseline, route.runId, c.signal).then(setDrift).catch(fail);
+    } else setDrift(null);
+    if (route.name === "compare") {
+      api.comparison(route.runs, [], c.signal).then(setMatrix).catch(fail);
+    } else setMatrix(null);
+    return () => c.abort();
   }, [route]);
 
   const go = (hash: string) => {
@@ -92,9 +115,13 @@ export function App() {
 
   let body = null;
   if (route.name === "workpaper" && workpaper) {
-    body = (
-      <Workpaper document={workpaper} onBack={() => go(`#/runs/${route.runId}`)} />
-    );
+    body = <Workpaper document={workpaper} onBack={() => go(`#/runs/${route.runId}`)} />;
+  } else if (route.name === "coverage" && coverage) {
+    body = <Coverage coverage={coverage} />;
+  } else if (route.name === "drift" && drift) {
+    body = <Drift report={drift} />;
+  } else if (route.name === "compare" && matrix) {
+    body = <Comparison matrix={matrix} />;
   } else if (route.name === "trials" && run) {
     const evidence = run.evidence[route.unit];
     body = evidence ? (
@@ -108,11 +135,26 @@ export function App() {
         run={run}
         onBack={() => go("#/")}
         onOpenWorkpaper={() => go(`#/runs/${run.run_id}/workpaper`)}
+        onOpenCoverage={() => go(`#/runs/${run.run_id}/coverage`)}
         onOpenTrials={(unit) => go(`#/runs/${run.run_id}/trials/${unit}`)}
       />
     );
   } else if (route.name === "runs" && runs) {
-    body = <RunsIndex runs={runs} onSelect={(id) => go(`#/runs/${id}`)} />;
+    body = (
+      <>
+        <RunsIndex runs={runs} onSelect={(id) => go(`#/runs/${id}`)} />
+        {runs.length >= 2 && (
+          <p className="mt-8 text-sm text-ink-soft" data-print="hide">
+            <button
+              className="text-accent hover:underline"
+              onClick={() => go(`#/compare/${runs[0]!.run_id}/${runs[1]!.run_id}`)}
+            >
+              Compare the two most recent runs →
+            </button>
+          </p>
+        )}
+      </>
+    );
   } else if (!error) {
     body = <p className="text-sm text-muted">Loading evidence…</p>;
   }
