@@ -1,5 +1,24 @@
 # Front-end brief — ai-audit-toolkit
 
+> **Status: F0–F4 shipped 2026-07-31 → 2026-08-01. F5 deferred by design, not pending.**
+> One commit per phase, as §9 required:
+>
+> - **F0** `7408ee0` — read-only evidence API. `serve.py` (35 KB), `tests/test_serve.py`, fixture
+>   generator at `web/tests/fixtures/generate.py`.
+> - **F1** `714b7e4` — scaffold, tokens, the interval component, runs index and run detail.
+>   `web/tests/interval.test.tsx` and `honesty.test.tsx`.
+> - **F2** `6d95a61` — `Workpaper.tsx`, `TrialDetail.tsx`, print stylesheet in `web/src/index.css`.
+> - **F3** `ed77ad6` — `Coverage.tsx`, `Drift.tsx`, `Comparison.tsx` on a shared interval scale.
+> - **F4** `c864cf4` — `JournalView.tsx` and `journal.test.tsx`, chain verification with its limits
+>   stated.
+>
+> **F5 — operator console — is not next-up work.** §9 blocks it on an explicit decision about a
+> browser triggering paid API calls, and that decision has not been made. Leave it closed until it is.
+>
+> `DECISIONS.md` is at 44 entries, up from the 41 this brief was written against, so the front-end
+> decisions §9 asked for were recorded. The working tree is clean apart from
+> `.claude/settings.local.json`.
+
 A build spec for a professional-grade web front end over the existing engine.
 Written to be executed largely autonomously, in phases, each ending green and
 committed.
