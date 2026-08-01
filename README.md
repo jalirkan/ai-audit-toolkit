@@ -76,6 +76,27 @@ no model calls — a planted-signal check of the lexical screen itself. Omit
 `--screen-only` to run the same dataset's questions through the live citation
 probe against an adapter.
 
+**The shipped golden set fails, on purpose.** It contains the failure modes a
+lexical screen cannot handle — correct paraphrase, entity swaps, subtle term
+substitutions — and reports accuracy per category rather than as one number:
+
+```
+    [INCONCLUSIVE] verbatim          1.000 (95% CI [0.676, 1.000], 8/8)
+    [        FAIL] paraphrase        0.000 (95% CI [0.000, 0.324], 0/8)
+    [INCONCLUSIVE] unsourced-number  1.000 (95% CI [0.676, 1.000], 8/8)
+    [INCONCLUSIVE] negation-flip     1.000 (95% CI [0.676, 1.000], 8/8)
+    [        FAIL] entity-swap       0.000 (95% CI [0.000, 0.324], 0/8)
+    [        FAIL] term-swap         0.000 (95% CI [0.000, 0.324], 0/8)
+```
+
+An earlier version of this dataset reported 100% accuracy, because it contained
+only cases the screen handles — it was measuring the dataset, not the method.
+An aggregate over a golden set is a weighted average across whatever mix the
+author wrote, and deleting the hard items would raise it while changing nothing
+real. So the hard items stay, the score is stratified, and the verdict is taken
+per category. Use this to know where the screen can be relied on, not to certify
+it.
+
 `monitor` is the cron-friendly drift wrapper: same comparison as `drift`, plus a
 status JSON (default `runs/monitor-status.json`) and exit code 4 when drift is
 detected. Example crontab (daily 06:00) and Windows Task Scheduler:
@@ -117,7 +138,9 @@ python cli.py run suites/baseline.json --adapter openai
   Scheduler); there is no built-in daemon or emailer.
 - **Golden RAG harness** — closed-context dataset of sources + labeled gold
   answers for planted-signal checks of the citation screen
-  (`datasets/northwind-rag-golden.json`). Not a retrieval engine.
+  (`datasets/northwind-rag-golden.json`). Deliberately includes the cases the
+  screen gets wrong, and scores per category so they cannot be averaged away.
+  Not a retrieval engine.
 - **Workpaper generation** — procedure, population, criterion, result,
   exceptions, limitations, and conclusion per unit tested, plus a
   management letter with findings ranked by a stated severity rule. Markdown
@@ -139,7 +162,9 @@ none:
 - **The screens are lexical.** There is no semantic model here. Consistency
   clustering, citation support, and canary detection are all token matching.
   Each probe states what that costs, and those statements are rendered into the
-  workpaper next to the result.
+  workpaper next to the result. The citation screen is 0-for-8 on paraphrase,
+  entity swaps, and term swaps in the shipped golden set — measured, not
+  estimated. It does catch invented figures and inverted polarity.
 - **The injection leak rate is a lower bound.** Encoded or acrostic
   exfiltration succeeds without being counted.
 - **The hash chain detects edits, not rewrites.** Anyone who can rewrite the

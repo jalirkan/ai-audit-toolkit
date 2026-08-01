@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from adapters.mock import MATCH_ANY, MockAdapter, MockRule
@@ -117,11 +118,55 @@ class TestScreenCheck(unittest.TestCase):
         self.assertIn("95% CI", rendered)
         self.assertRegex(rendered, r"\d+/\d+")
 
-    def test_shipped_golden_set_passes_the_screen(self):
+    def test_shipped_golden_set_fails_on_the_screens_blind_spots(self):
+        # This asserted a pass while the dataset contained only cases the
+        # screen handles. The dataset now includes the failure modes
+        # probes/citation.py documents, and the honest result is a fail.
         result = run_screen_check(load_dataset(GOLDEN))
-        self.assertEqual(result.outcome, OUTCOME_PASS)
-        self.assertEqual(result.false_positives.value, 0.0)
-        self.assertEqual(result.false_negatives.value, 0.0)
+        self.assertEqual(result.outcome, OUTCOME_FAIL)
+        self.assertEqual(
+            sorted(result.failing_categories),
+            ["entity-swap", "paraphrase", "term-swap"],
+        )
+
+    def test_the_screen_is_perfect_on_the_categories_it_can_do(self):
+        result = run_screen_check(load_dataset(GOLDEN))
+        by_category = {s.category: s.accuracy.value for s in result.strata}
+        for category in (
+            "verbatim",
+            "unsourced-number",
+            "negation-flip",
+            "abstention",
+            "off-topic",
+        ):
+            with self.subTest(category=category):
+                self.assertEqual(by_category[category], 1.0)
+
+    def test_every_miss_was_predicted_by_the_dataset(self):
+        # An unpredicted miss is new information about the screen; there
+        # should be none, because the dataset labels its own blind spots.
+        result = run_screen_check(load_dataset(GOLDEN))
+        self.assertEqual([i.item_id for i in result.surprises], [])
+
+    def test_the_overall_figure_is_labelled_composition_dependent(self):
+        text = "\n".join(run_screen_check(load_dataset(GOLDEN)).summary_lines())
+        self.assertIn("depends on the mix of cases", text)
+
+    def test_deleting_the_hard_cases_would_flatter_the_screen(self):
+        # The point of keeping them. Screening only the categories the method
+        # handles yields a perfect score that says nothing.
+        dataset = load_dataset(GOLDEN)
+        easy = tuple(
+            i
+            for i in dataset.items
+            if i.category not in ("paraphrase", "entity-swap", "term-swap")
+        )
+        flattered = run_screen_check(replace(dataset, items=easy))
+        self.assertEqual(flattered.accuracy.value, 1.0)
+        self.assertGreater(
+            flattered.accuracy.value,
+            run_screen_check(dataset).accuracy.value,
+        )
 
     def test_a_wrong_label_fails_the_check(self):
         # Most gold answers are faithful but labeled unfaithful: screen disagrees.

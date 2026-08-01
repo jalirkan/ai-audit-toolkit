@@ -406,3 +406,62 @@ monitor` re-runs a suite against a saved baseline (same comparison as `drift`),
 writes a machine-readable status JSON, and exits `EXIT_DRIFT` when
 `has_drift` is true. Cron or Task Scheduler owns the schedule and the alert
 channel; this toolkit does not daemonize, mail, or page.
+
+## D-040 · 2026-07-28 · The citation screen checks polarity explicitly
+*Amends D-015, which described the screen as pure token overlap.*
+
+Negation words are stopwords. That is right for similarity — "the cat sat" and
+"the cat did not sit" concern the same subject — and it is the worst possible
+default for a *support* check, because a claim and its exact negation then
+match the same source equally well. "Northwind does ship hazardous materials"
+scored as fully supported against a source stating it does **not**.
+
+For a control that exists to catch fabricated claims about policy, silently
+passing an inverted safety statement is the highest-consequence error available
+to it. `assess_claim` now compares the polarity of the claim against the source
+it matched, and only where coverage would otherwise have passed — a
+low-coverage sentence is already unsupported and should say so for that reason.
+Measured on the golden dataset, negation flips caught went from 2 of 8 to 8 of
+8, with no new false positives on legitimately negated claims.
+
+`is_negated` is coarse: it detects that a negation is present, not what it
+scopes over, so a sentence that negates one clause and asserts another reads as
+negated throughout. Documented rather than hidden. The alternative — ignoring
+polarity — is not a more conservative choice, it is a wrong one.
+
+## D-041 · 2026-07-28 · A golden dataset must contain the method's blind spots
+*Amends D-038, which established the harness but not what belongs in it.*
+
+The shipped dataset reported **100% screen accuracy, zero false positives, zero
+false negatives**. The same screen, put to six realistic cases drawn from the
+failure modes `probes/citation.py` already documented, got **none of them
+right**. The dataset was composed almost entirely of near-verbatim answers and
+answers containing invented numbers — the two things a lexical screen trivially
+handles. It was measuring the dataset, not the method, and it produced a
+confident figure while doing so. That is worse than having no harness at all.
+
+Two rules follow.
+
+**The dataset carries the cases the method fails.** Paraphrase, entity swap,
+and term swap are in it, labelled `known_screen_miss`, and they stay there.
+Deleting them would raise the headline number and change nothing real. An item
+that fails *without* being marked as a known blind spot is surfaced separately
+as a surprise, because that is new information about the screen.
+
+**Accuracy is reported per category and decided per category.** An aggregate
+over a golden dataset is a weighted average across whatever mix the author
+wrote, movable at will by adding easy items. Per-category accuracy is not, and
+the rollup is by precedence exactly as a battery is (D-016): fail if any
+category fails. The overall figure is still shown, labelled as
+composition-dependent, so a reader who wants one number gets one with the
+warning attached.
+
+The shipped dataset now reads: 1.000 on verbatim, unsourced-number,
+negation-flip, abstention, and off-topic; **0.000 on paraphrase, entity-swap,
+and term-swap**; overall FAIL. That is the truth about a lexical screen, and it
+is what the workpapers should have been saying all along.
+
+The per-stratum minimum sample is 8 rather than 20: a category the screen
+cannot do at all fails decisively at 0/8 (upper bound near 0.32), while 8/8
+still reads inconclusive, so the harness will not certify a category from a
+handful of easy examples.

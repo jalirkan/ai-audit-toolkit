@@ -409,22 +409,37 @@ class TestMonitor(CliTestCase):
 class TestRag(CliTestCase):
     GOLDEN = str(REPO_ROOT / "datasets" / "northwind-rag-golden.json")
 
-    def test_screen_only_passes_the_shipped_dataset(self):
+    def test_screen_only_reports_the_screens_blind_spots(self):
         code, out = run_cli("rag", self.GOLDEN, "--screen-only")
-        self.assertEqual(code, cli.EXIT_OK)
-        self.assertIn("[PASS]", out)
-        self.assertIn("screen_accuracy", out)
+        self.assertEqual(code, cli.EXIT_FINDINGS)
+        self.assertIn("[FAIL]", out)
         self.assertIn("95% CI", out)
+        # The categories the screen cannot do are named, not averaged away.
+        self.assertIn("by category:", out)
+        for category in ("paraphrase", "entity-swap", "term-swap"):
+            with self.subTest(category=category):
+                self.assertIn(category, out)
+
+    def test_screen_only_explains_why_the_hard_cases_stay(self):
+        _, out = run_cli("rag", self.GOLDEN, "--screen-only")
+        self.assertIn("deleting them would raise the overall figure", out.lower())
 
     def test_screen_only_can_write_status(self):
         status = str(self.root / "rag-status.json")
         code, _ = run_cli(
             "rag", self.GOLDEN, "--screen-only", "--status-out", status
         )
-        self.assertEqual(code, cli.EXIT_OK)
+        self.assertEqual(code, cli.EXIT_FINDINGS)
         payload = json.loads(Path(status).read_text(encoding="utf-8"))
-        self.assertEqual(payload["outcome"], "pass")
+        self.assertEqual(payload["outcome"], "fail")
         self.assertIn("accuracy", payload)
+        # The per-category detail has to survive into the machine-readable
+        # status too, or a monitor consuming it sees only the aggregate.
+        self.assertIn("strata", payload)
+        self.assertEqual(
+            sorted(payload["failing_categories"]),
+            ["entity-swap", "paraphrase", "term-swap"],
+        )
 
     def test_missing_dataset_is_a_clean_error(self):
         code, out = run_cli(

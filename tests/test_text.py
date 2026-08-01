@@ -5,8 +5,10 @@ from __future__ import annotations
 import unittest
 
 from probes.text import (
+    NEGATION_CUES,
     STOPWORDS,
     any_contains,
+    is_negated,
     cluster_by_similarity,
     contains_normalized,
     content_tokens,
@@ -46,6 +48,49 @@ class TestContentTokens(unittest.TestCase):
 
     def test_deduplicates(self):
         self.assertEqual(content_tokens("cat cat cat"), {"cat"})
+
+
+class TestIsNegated(unittest.TestCase):
+    def test_detects_plain_negation(self):
+        for text in (
+            "Northwind does not ship live animals.",
+            "No information is provided.",
+            "Livestock cannot be sent.",
+            "Claims need not be filed.",
+            "Neither option is available.",
+            "Shipping hazardous goods is prohibited.",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(is_negated(text))
+
+    def test_detects_contractions(self):
+        # The tokenizer splits "doesn't" into "doesn" and "t", so the cue is
+        # found in the raw text instead.
+        self.assertTrue(is_negated("Northwind doesn't ship animals."))
+        self.assertTrue(is_negated("They don't accept livestock."))
+
+    def test_plain_assertions_are_not_negated(self):
+        for text in (
+            "Northwind ships live animals.",
+            "Standard delivery takes five to seven business days.",
+            "Priority carries a surcharge of 18 dollars.",
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(is_negated(text))
+
+    def test_negation_words_are_also_stopwords(self):
+        # The reason this function has to read raw text: content_tokens drops
+        # exactly the words that carry polarity.
+        self.assertNotIn("not", content_tokens("does not ship animals"))
+        self.assertEqual(
+            content_tokens("Northwind will ship animals"),
+            content_tokens("Northwind will not ship animals"),
+        )
+        # Identical token sets, opposite meanings, opposite polarity.
+        self.assertNotEqual(
+            is_negated("Northwind will ship animals"),
+            is_negated("Northwind will not ship animals"),
+        )
 
 
 class TestJaccard(unittest.TestCase):

@@ -4,9 +4,9 @@
 
 **To:** Vendor Management  
 **Battery:** baseline-assurance  
-**Run:** 18d62f69a554eaa4  
+**Run:** eee5c5c853ad5d2a  
 **Model tested:** mock:demo-vendor-assistant (fingerprint 831c92d17ccb)  
-**Performed:** 2026-07-27T05:14:42.730029Z to 2026-07-27T05:14:42.762989Z  
+**Performed:** 2026-08-01T02:11:07.061550Z to 2026-08-01T02:11:07.095007Z  
 **Prepared by:** J. Alirkan  
 
 ## Basis and scope

@@ -20,11 +20,49 @@ EXPECT_FAITHFUL = "faithful"
 EXPECT_UNFAITHFUL = "unfaithful"
 EXPECTATIONS = frozenset({EXPECT_FAITHFUL, EXPECT_UNFAITHFUL})
 
+#: What kind of case an item exercises. Reported as strata, because an overall
+#: accuracy figure is a weighted average over whatever mix the dataset author
+#: happened to write -- add ten more verbatim items and the number climbs
+#: without the screen improving at all. Per-category accuracy cannot be moved
+#: that way, and it shows which failure modes are real.
+CATEGORY_VERBATIM = "verbatim"
+CATEGORY_PARAPHRASE = "paraphrase"
+CATEGORY_ABSTENTION = "abstention"
+CATEGORY_UNSOURCED_NUMBER = "unsourced-number"
+CATEGORY_NEGATION_FLIP = "negation-flip"
+CATEGORY_ENTITY_SWAP = "entity-swap"
+CATEGORY_TERM_SWAP = "term-swap"
+CATEGORY_OFF_TOPIC = "off-topic"
+CATEGORY_UNSPECIFIED = "unspecified"
+CATEGORIES = frozenset(
+    {
+        CATEGORY_VERBATIM,
+        CATEGORY_PARAPHRASE,
+        CATEGORY_ABSTENTION,
+        CATEGORY_UNSOURCED_NUMBER,
+        CATEGORY_NEGATION_FLIP,
+        CATEGORY_ENTITY_SWAP,
+        CATEGORY_TERM_SWAP,
+        CATEGORY_OFF_TOPIC,
+        CATEGORY_UNSPECIFIED,
+    }
+)
+
 __all__ = [
     "SCHEMA_VERSION",
     "EXPECT_FAITHFUL",
     "EXPECT_UNFAITHFUL",
     "EXPECTATIONS",
+    "CATEGORIES",
+    "CATEGORY_VERBATIM",
+    "CATEGORY_PARAPHRASE",
+    "CATEGORY_ABSTENTION",
+    "CATEGORY_UNSOURCED_NUMBER",
+    "CATEGORY_NEGATION_FLIP",
+    "CATEGORY_ENTITY_SWAP",
+    "CATEGORY_TERM_SWAP",
+    "CATEGORY_OFF_TOPIC",
+    "CATEGORY_UNSPECIFIED",
     "GoldenItem",
     "GoldenDataset",
     "load_dataset",
@@ -39,6 +77,15 @@ class GoldenItem:
     question: str
     gold_answer: str
     expect: str
+    #: Which failure mode this item exercises. Optional so older datasets still
+    #: load; they report as a single ``unspecified`` stratum, which is itself a
+    #: useful signal that the dataset cannot say where the screen breaks.
+    category: str = CATEGORY_UNSPECIFIED
+    #: Set when the screen is *known* to get this item wrong and the dataset
+    #: keeps it anyway. Documenting a blind spot is worth more than deleting
+    #: the item that reveals it.
+    known_screen_miss: bool = False
+    note: str = ""
 
     def __post_init__(self) -> None:
         if not self.id:
@@ -52,6 +99,11 @@ class GoldenItem:
                 f"item {self.id!r} expect must be one of {sorted(EXPECTATIONS)}, "
                 f"got {self.expect!r}"
             )
+        if self.category not in CATEGORIES:
+            raise ValueError(
+                f"item {self.id!r} category must be one of {sorted(CATEGORIES)}, "
+                f"got {self.category!r}"
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -59,6 +111,9 @@ class GoldenItem:
             "question": self.question,
             "gold_answer": self.gold_answer,
             "expect": self.expect,
+            "category": self.category,
+            "known_screen_miss": self.known_screen_miss,
+            "note": self.note,
         }
 
     @classmethod
@@ -68,6 +123,9 @@ class GoldenItem:
             question=data["question"],
             gold_answer=data["gold_answer"],
             expect=data["expect"],
+            category=data.get("category", CATEGORY_UNSPECIFIED),
+            known_screen_miss=bool(data.get("known_screen_miss", False)),
+            note=data.get("note", ""),
         )
 
 
@@ -96,6 +154,18 @@ class GoldenDataset:
         ids = [item.id for item in self.items]
         if len(ids) != len(set(ids)):
             raise ValueError(f"dataset {self.id!r} has duplicate item ids: {ids}")
+
+    @property
+    def categories(self) -> Tuple[str, ...]:
+        """Distinct categories present, in first-appearance order."""
+        seen: list = []
+        for item in self.items:
+            if item.category not in seen:
+                seen.append(item.category)
+        return tuple(seen)
+
+    def items_in(self, category: str) -> Tuple["GoldenItem", ...]:
+        return tuple(i for i in self.items if i.category == category)
 
     def as_citation_case(self) -> CitationCase:
         """Live path: same sources and questions, scored by the citation probe."""
