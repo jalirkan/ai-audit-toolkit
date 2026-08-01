@@ -11,6 +11,7 @@
  * than replaced with a generic failure string.
  */
 
+import { type DocumentModel, parseDocument } from "./document";
 import {
   type BatteryResult,
   type ProbeInfo,
@@ -76,6 +77,19 @@ export const api = {
     return request<Record<string, unknown>>(
       `/api/runs/${runId}/coverage${query}`,
       signal,
+    );
+  },
+
+  workpaper: async (
+    runId: string,
+    capabilities: string[] = [],
+    signal?: AbortSignal,
+  ): Promise<DocumentModel> => {
+    const query = capabilities.length
+      ? `?capabilities=${encodeURIComponent(capabilities.join(","))}`
+      : "";
+    return parseDocument(
+      await request<unknown>(`/api/runs/${runId}/workpaper${query}`, signal),
     );
   },
 

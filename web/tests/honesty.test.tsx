@@ -19,11 +19,16 @@ import { describe, expect, it } from "vitest";
 import runA from "./fixtures/run-d51a4ffee83b0707.json";
 import runB from "./fixtures/run-6061be9acf3a4779.json";
 import runsIndexFixture from "./fixtures/runs-index.json";
+import wpA from "./fixtures/workpaper-d51a4ffee83b0707.json";
+import wpB from "./fixtures/workpaper-6061be9acf3a4779.json";
 
 import { IntervalMark, IntervalRow } from "../src/design/Interval";
 import { OutcomeTag } from "../src/design/Outcome";
 import { RunDetail } from "../src/views/RunDetail";
 import { RunsIndex } from "../src/views/RunsIndex";
+import { TrialDetail } from "../src/views/TrialDetail";
+import { Workpaper } from "../src/views/Workpaper";
+import { parseDocument } from "../src/api/document";
 import { parseBatteryResult } from "../src/api/schema";
 import type { Measurement, RunSummary } from "../src/api/schema";
 
@@ -35,6 +40,10 @@ const parsed = [runA, runB].map(parseBatteryResult);
 const scripted = parsed.find((r) => r.fingerprint.model === "demo-vendor-assistant")!;
 const bare = parsed.find((r) => r.fingerprint.model === "bare-mock")!;
 const runs = runsIndexFixture as unknown as RunSummary[];
+const papers = [wpA, wpB].map(parseDocument);
+const scriptedPaper = papers.find((d) =>
+  JSON.stringify(d).includes("demo-vendor-assistant"),
+)!;
 
 /** A percentage, as the Python scan defines one. */
 const PERCENT = /\d+(?:\.\d+)?\s*%/;
@@ -78,24 +87,46 @@ function enclosingBlock(node: Node): HTMLElement | null {
  * interval to report. The exemption is an attribute rather than a wording
  * match so it must be declared in code and cannot be triggered by accident.
  */
+/**
+ * Longest text that still reads as a rendered figure rather than a sentence.
+ *
+ * The rate rule targets one failure: a view printing a measurement's value on
+ * its own, as `<span>{m.value}</span>`. Engine prose legitimately quotes a
+ * threshold mid-sentence -- "the whole interval lies at or above the required
+ * minimum of 0.800" -- and that number is a criterion, not an estimate, so it
+ * has no interval to carry. The Python scan never flagged those because it
+ * only inspects lines containing a percent sign; applying the stricter rate
+ * rule to prose produced false positives on the workpaper's own decision
+ * rationale.
+ *
+ * So: the percent rule applies everywhere, exactly as `test_report.py` does
+ * it, and the rate rule applies to short, figure-shaped text nodes.
+ */
+const FIGURE_MAX_CHARS = 48;
+
 function assertNoBareRates(container: HTMLElement, label: string): void {
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
   let node: Node | null = walker.nextNode();
   while (node) {
     const text = node.textContent ?? "";
+    const trimmed = text.trim();
     const parent = node.parentElement;
     const exempt = parent?.closest("[data-role='criterion'],[data-role='axis']");
 
-    if (!exempt && (PERCENT.test(text) || RATE.test(text))) {
+    const looksLikeFigure = trimmed.length <= FIGURE_MAX_CHARS;
+    const offending =
+      PERCENT.test(text) || (looksLikeFigure && RATE.test(text));
+
+    if (!exempt && offending) {
       const block = enclosingBlock(node);
       const context = block?.textContent ?? text;
       expect(
         context,
-        `${label}: a rate appears without an interval: ${text.trim()}`,
+        `${label}: a rate appears without an interval: ${trimmed}`,
       ).toMatch(/CI/);
       expect(
         context,
-        `${label}: a rate appears without a sample size: ${text.trim()}`,
+        `${label}: a rate appears without a sample size: ${trimmed}`,
       ).toMatch(SAMPLE);
     }
     node = walker.nextNode();
@@ -117,6 +148,22 @@ describe("1. no bare rates", () => {
   it("holds on a run whose every unit failed", () => {
     const { container } = render(<RunDetail run={bare} onBack={() => {}} />);
     assertNoBareRates(container, "run detail (all failing)");
+  });
+
+  it("holds on the workpaper", () => {
+    const { container } = render(
+      <Workpaper document={scriptedPaper} onBack={() => {}} />,
+    );
+    assertNoBareRates(container, "workpaper");
+  });
+
+  it("holds on the trial drill-down, across every unit", () => {
+    for (const evidence of scripted.evidence) {
+      const { container } = render(
+        <TrialDetail evidence={evidence} onBack={() => {}} />,
+      );
+      assertNoBareRates(container, `trials (${evidence.probe_id})`);
+    }
   });
 
   it("holds on the runs index", () => {
@@ -202,6 +249,17 @@ describe("2. no invented aggregate", () => {
   it.each([
     ["run detail", () => render(<RunDetail run={scripted} onBack={() => {}} />)],
     ["runs index", () => render(<RunsIndex runs={runs} onSelect={() => {}} />)],
+    [
+      "workpaper",
+      () => render(<Workpaper document={scriptedPaper} onBack={() => {}} />),
+    ],
+    [
+      "trial detail",
+      () =>
+        render(
+          <TrialDetail evidence={scripted.evidence[0]!} onBack={() => {}} />,
+        ),
+    ],
   ])("%s asserts no aggregate figure", (label, mount) => {
     const { container } = mount();
     const text = assertedText(container);

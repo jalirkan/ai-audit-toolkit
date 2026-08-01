@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import shutil
 import sys
 import threading
@@ -158,6 +159,93 @@ class TestCoverage(ApiTestCase):
         with self.assertRaises(ApiError) as ctx:
             self.api.coverage(self.scripted_id, ("Evidence Journal",))
         self.assertEqual(ctx.exception.status, 400)
+
+
+class TestWorkpaper(ApiTestCase):
+    """The workpaper endpoint renders the same model the printed one does."""
+
+    def blocks(self, document, kind=None):
+        found = []
+
+        def walk(section):
+            for block in section["blocks"]:
+                if kind is None or block["type"] == kind:
+                    found.append(block)
+            for sub in section["subsections"]:
+                walk(sub)
+
+        for section in document["sections"]:
+            walk(section)
+        return found
+
+    def test_the_document_has_the_workpaper_sections(self):
+        document = self.api.workpaper(self.scripted_id, ())
+        titles = []
+
+        def walk(section):
+            titles.append(section["title"])
+            for sub in section["subsections"]:
+                walk(sub)
+
+        for section in document["sections"]:
+            walk(section)
+        for required in (
+            "Procedure performed",
+            "Population and examination",
+            "Result",
+            "Conclusion",
+            "Limitations of this procedure",
+        ):
+            self.assertIn(required, titles)
+
+    def test_the_evidence_hash_is_present_and_real(self):
+        # The reason this is an endpoint rather than a client-side render:
+        # the hash is computed from canonical JSON and cannot be recomputed in
+        # the browser without reimplementing core.canonical.
+        result = self.api.load_run(self.scripted_id)
+        expected = {e.content_hash() for e in result.evidence}
+        document = self.api.workpaper(self.scripted_id, ())
+        rendered = {
+            value
+            for block in self.blocks(document, "fields")
+            for label, value in block["pairs"]
+            if label == "Evidence hash"
+        }
+        self.assertTrue(rendered)
+        self.assertTrue(rendered <= expected)
+
+    def test_limitations_are_rendered_beside_the_result(self):
+        # D-015: what the lexical screen costs is shown next to the finding,
+        # not buried in a docstring.
+        document = self.api.workpaper(self.scripted_id, ())
+        callouts = " ".join(b["text"] for b in self.blocks(document, "callout"))
+        self.assertIn("lower bound", callouts)
+
+    def test_the_population_is_not_described_as_a_sample(self):
+        # D-031: these procedures are a complete examination of a configured
+        # population, and "sample of 22" would imply a sampling frame that
+        # does not exist.
+        document = self.api.workpaper(self.scripted_id, ())
+        text = json.dumps(document)
+        self.assertIn("complete", text.lower())
+
+    def test_the_journal_head_travels_with_the_document(self):
+        document = self.api.workpaper(self.scripted_id, ())
+        with Journal(self.workspace / "runs" / "journal.db") as jrnl:
+            head = jrnl.head()
+        self.assertIn(head, json.dumps(document))
+
+    def test_no_bare_rates_in_the_rendered_document(self):
+        # Mirrors test_report.py's scan, applied to the third renderer.
+        document = self.api.workpaper(self.scripted_id, ())
+        for line in json.dumps(document, indent=1).split("\n"):
+            if re.search(r"\d+(?:\.\d+)?\s*%", line):
+                self.assertIn("CI", line, f"bare rate: {line.strip()!r}")
+
+    def test_an_unknown_run_is_refused(self):
+        with self.assertRaises(ApiError) as ctx:
+            self.api.workpaper("0" * 16, ())
+        self.assertEqual(ctx.exception.status, 404)
 
 
 class TestJournal(ApiTestCase):

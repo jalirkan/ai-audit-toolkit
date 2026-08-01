@@ -19,7 +19,13 @@ import { IntervalRow } from "../design/Interval";
 import { Caveat, Field, OutcomeCountsRow, OutcomeTag } from "../design/Outcome";
 import { formatTimestamp, metricLabel, shortHash } from "../lib/format";
 
-function UnitCard({ evidence }: { evidence: Evidence }) {
+function UnitCard({
+  evidence,
+  onOpenTrials,
+}: {
+  evidence: Evidence;
+  onOpenTrials?: () => void;
+}) {
   const decisive = decisionMeasurement(evidence);
   const threshold =
     typeof evidence.config.decision_threshold === "number"
@@ -101,6 +107,17 @@ function UnitCard({ evidence }: { evidence: Evidence }) {
         </Field>
       </dl>
 
+      {onOpenTrials && (
+        <button
+          className="mt-4 text-xs uppercase tracking-wider text-accent hover:underline"
+          onClick={onOpenTrials}
+          data-print="hide"
+          data-testid="open-trials"
+        >
+          Examine the {evidence.trials.length} model call(s) →
+        </button>
+      )}
+
       {decisive && evidence.measurements.length > 1 && (
         <p className="mt-3 text-xs text-muted">
           The conclusion rests on {metricLabel(decisive.name)}; the other
@@ -120,9 +137,13 @@ function UnitCard({ evidence }: { evidence: Evidence }) {
 export function RunDetail({
   run,
   onBack,
+  onOpenWorkpaper,
+  onOpenTrials,
 }: {
   run: BatteryResult;
   onBack: () => void;
+  onOpenWorkpaper?: () => void;
+  onOpenTrials?: (unit: number) => void;
 }) {
   return (
     <div>
@@ -160,6 +181,17 @@ export function RunDetail({
           <OutcomeTag outcome={run.outcome} showMeaning />
         </div>
 
+        {onOpenWorkpaper && (
+          <button
+            className="mt-5 border border-rule px-3 py-1.5 text-xs uppercase tracking-wider text-ink-soft hover:border-rule-strong hover:text-ink"
+            onClick={onOpenWorkpaper}
+            data-print="hide"
+            data-testid="open-workpaper"
+          >
+            Open workpaper
+          </button>
+        )}
+
         <div className="mt-5">
           <Caveat>
             The run-level outcome is chosen by precedence — fail, then error,
@@ -175,7 +207,11 @@ export function RunDetail({
           Units tested
         </h2>
         {run.evidence.map((evidence, i) => (
-          <UnitCard key={`${evidence.probe_id}-${unitOf(evidence)}-${i}`} evidence={evidence} />
+          <UnitCard
+            key={`${evidence.probe_id}-${unitOf(evidence)}-${i}`}
+            evidence={evidence}
+            onOpenTrials={onOpenTrials ? () => onOpenTrials(i) : undefined}
+          />
         ))}
       </section>
 

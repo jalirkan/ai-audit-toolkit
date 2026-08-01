@@ -324,6 +324,42 @@ class AuditApi:
         payload["disclaimer"] = MAPPING_DISCLAIMER
         return payload
 
+    def workpaper(self, run_id: str, capabilities: Sequence[str]) -> Dict[str, Any]:
+        """The workpaper document, as a structure the browser can lay out.
+
+        A third rendering of the model `report/workpaper.py` already builds,
+        alongside Markdown and HTML (D-029). Rendering the same blocks means
+        the workpaper a reviewer reads on screen and the one they print are the
+        same document rather than two descriptions of it -- and the evidence
+        hash, the population note, and the limitations callout reach the screen
+        because they are in the model, not because a view remembered them.
+
+        Recomputing the evidence hash in the browser was the alternative. It
+        would mean reimplementing `core.canonical` in TypeScript, where a
+        disagreement about key order or separators produces a hash that is
+        wrong but looks right -- the worst possible failure for the field whose
+        entire job is tying a finding to the journal.
+        """
+        from report.document import document_to_dict
+        from report.workpaper import build_workpapers
+
+        result = self.load_run(run_id)
+        for capability in capabilities:
+            if not CAPABILITY_PATTERN.match(capability):
+                raise _bad_request(
+                    "invalid-capability",
+                    f"capability {capability!r} is not a lowercase hyphenated name",
+                )
+        # The head at the time of reading, so the printed workpaper carries the
+        # value a reviewer would anchor. Absent when no journal exists rather
+        # than faked, for the same reason unreported token usage stays absent.
+        head = ""
+        if self.journal_path.is_file():
+            with Journal(self.journal_path) as jrnl:
+                head = jrnl.head()
+        document = build_workpapers(result, journal_head=head)
+        return document_to_dict(document)
+
     # -- journal --------------------------------------------------------------
 
     def _journal(self) -> Journal:
@@ -659,6 +695,10 @@ ROUTES: List[Route] = [
     (
         re.compile(r"^/api/runs/(?P<run_id>[^/]+)/coverage$"),
         lambda api, m, q: api.coverage(m["run_id"], _csv(q, "capabilities")),
+    ),
+    (
+        re.compile(r"^/api/runs/(?P<run_id>[^/]+)/workpaper$"),
+        lambda api, m, q: api.workpaper(m["run_id"], _csv(q, "capabilities")),
     ),
     (
         re.compile(r"^/api/journal/entries$"),

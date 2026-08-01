@@ -126,6 +126,12 @@ def capture(api: AuditApi) -> list[Path]:
         written.append(_write(f"run-{run_id}.json", api.run(run_id)))
         written.append(
             _write(
+                f"workpaper-{run_id}.json",
+                api.workpaper(run_id, ("evidence-journal", "workpapers")),
+            )
+        )
+        written.append(
+            _write(
                 f"coverage-{run_id}.json",
                 api.coverage(
                     run_id,

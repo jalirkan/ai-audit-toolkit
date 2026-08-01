@@ -545,3 +545,30 @@ D-001 gets an executable guard: a test parses `serve.py`'s imports and fails if
 any resolves into site-packages. A dependency added to the Python side would
 take the engine's zero-install guarantee with it, and that is too important to
 leave to a reviewer noticing a diff.
+
+## D-044 · 2026-08-01 · The workpaper gets a third renderer, not a second implementation
+*Extends D-029, which established one document model with two renderers.*
+
+The web workpaper renders `report/document.py`'s block structure, served as
+JSON by `/api/runs/:id/workpaper`. It is a third renderer over the model
+`build_workpapers` already produces, not a React reimplementation of what a
+workpaper contains.
+
+D-029's argument was that converting Markdown into HTML would let the two
+outputs drift apart in content. The argument is stronger for a third surface:
+the workpaper a reviewer reads on screen and the one they print must be the
+same document, or the tool has two accounts of the same evidence. With one
+model they cannot diverge — a section missing from the screen is missing from
+the Markdown too, and a test asserts the sections are all present.
+
+The deciding constraint was the evidence hash. `Evidence.content_hash()` is
+computed over canonical JSON (D-009) and is not carried in the payload.
+Recomputing it in the browser would mean reimplementing `core.canonical` in
+TypeScript, where a disagreement about key ordering or separators yields a
+hash that is wrong but looks right — the worst available failure for the one
+field whose entire job is tying a finding to the journal. The server computes
+it, because the server is where the canonical encoder lives.
+
+The endpoint also passes the current journal head into the document, so a
+printed workpaper carries the value a reviewer would anchor (D-017). Absent
+when no journal exists, rather than faked.

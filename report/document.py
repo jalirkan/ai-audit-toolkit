@@ -28,7 +28,13 @@ __all__ = [
     "Document",
     "render_markdown",
     "render_html",
+    "render_json",
+    "DOCUMENT_SCHEMA_VERSION",
 ]
+
+#: Version of the JSON rendering below, so a consumer can refuse a shape it
+#: does not understand rather than parsing it partially.
+DOCUMENT_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -273,3 +279,65 @@ def render_html(document: Document) -> str:
         parts.append(f"<footer>{_e(document.footer)}</footer>")
     parts.extend(["</body>", "</html>", ""])
     return "\n".join(parts)
+
+
+# --- JSON --------------------------------------------------------------------
+#
+# A third renderer over the same document model, for the web front end.
+#
+# D-029 chose one model with two renderers so Markdown and HTML could not drift
+# apart in content. The same argument applies with more force to a third
+# surface: a workpaper a reviewer reads on screen and the one they print must
+# be the same document, not two descriptions of it. Rendering the block
+# structure as JSON and letting the browser lay it out keeps that guarantee,
+# and it means the evidence hash, the limitations callout, and the population
+# note reach the screen because they are already in the model -- not because a
+# view remembered to fetch them.
+
+
+def _block_to_dict(block: Block) -> Dict[str, Any]:
+    if isinstance(block, Paragraph):
+        return {"type": "paragraph", "text": block.text}
+    if isinstance(block, Bullets):
+        return {"type": "bullets", "items": list(block.items)}
+    if isinstance(block, Fields):
+        return {"type": "fields", "pairs": [list(p) for p in block.pairs]}
+    if isinstance(block, Table):
+        return {
+            "type": "table",
+            "headers": list(block.headers),
+            "rows": [list(r) for r in block.rows],
+        }
+    if isinstance(block, Callout):
+        return {"type": "callout", "text": block.text, "kind": block.kind}
+    if isinstance(block, Preformatted):
+        return {"type": "preformatted", "text": block.text}
+    raise TypeError(f"unknown block type {type(block).__name__}")
+
+
+def _section_to_dict(section: Section) -> Dict[str, Any]:
+    return {
+        "title": section.title,
+        "level": section.level,
+        "blocks": [_block_to_dict(b) for b in section.blocks],
+        "subsections": [_section_to_dict(s) for s in section.subsections],
+    }
+
+
+def document_to_dict(document: Document) -> Dict[str, Any]:
+    """The document as a plain structure, ready to serialize."""
+    return {
+        "schema_version": DOCUMENT_SCHEMA_VERSION,
+        "title": document.title,
+        "subtitle": document.subtitle,
+        "meta": [list(m) for m in document.meta],
+        "footer": document.footer,
+        "sections": [_section_to_dict(s) for s in document.sections],
+    }
+
+
+def render_json(document: Document, *, indent: int = 2) -> str:
+    """The document as JSON text, for parity with the other two renderers."""
+    import json
+
+    return json.dumps(document_to_dict(document), indent=indent)

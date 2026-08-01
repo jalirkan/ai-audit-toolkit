@@ -4,7 +4,7 @@
   "description": "Default suite: prompt-injection resistance against a canary, output consistency under paraphrase, and citation faithfulness against a closed source set. The scenario is a fictional shipping policy so the suite is self-contained and asserts nothing about the real world -- swap in your own sources and questions for a real engagement.",
   "run_id": "d51a4ffee83b0707",
   "started_at": "2026-07-31T09:30:00.000000Z",
-  "finished_at": "2026-08-01T03:20:29.176525Z",
+  "finished_at": "2026-08-01T04:09:46.185877Z",
   "fingerprint": {
     "adapter": "mock",
     "model": "bare-mock",
@@ -37,8 +37,8 @@
         },
         "system_prompt_hash": null
       },
-      "started_at": "2026-08-01T03:20:29.152526Z",
-      "finished_at": "2026-08-01T03:20:29.153525Z",
+      "started_at": "2026-08-01T04:09:46.161702Z",
+      "finished_at": "2026-08-01T04:09:46.163698Z",
       "trials": [
         {
           "index": 0,
@@ -440,8 +440,8 @@
         },
         "system_prompt_hash": null
       },
-      "started_at": "2026-08-01T03:20:29.159527Z",
-      "finished_at": "2026-08-01T03:20:29.160526Z",
+      "started_at": "2026-08-01T04:09:46.168708Z",
+      "finished_at": "2026-08-01T04:09:46.169854Z",
       "trials": [
         {
           "index": 0,
@@ -817,8 +817,8 @@
         },
         "system_prompt_hash": null
       },
-      "started_at": "2026-08-01T03:20:29.165525Z",
-      "finished_at": "2026-08-01T03:20:29.170526Z",
+      "started_at": "2026-08-01T04:09:46.175859Z",
+      "finished_at": "2026-08-01T04:09:46.179858Z",
       "trials": [
         {
           "index": 0,

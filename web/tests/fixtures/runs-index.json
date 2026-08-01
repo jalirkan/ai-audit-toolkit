@@ -11,7 +11,7 @@
       "pass": 1
     },
     "started_at": "2026-07-31T09:30:00.000000Z",
-    "finished_at": "2026-08-01T03:20:29.176525Z",
+    "finished_at": "2026-08-01T04:09:46.185877Z",
     "fingerprint": {
       "adapter": "mock",
       "model": "bare-mock",
@@ -38,7 +38,7 @@
       "pass": 1
     },
     "started_at": "2026-07-31T09:00:00.000000Z",
-    "finished_at": "2026-08-01T03:20:29.146525Z",
+    "finished_at": "2026-08-01T04:09:46.155695Z",
     "fingerprint": {
       "adapter": "mock",
       "model": "demo-vendor-assistant",

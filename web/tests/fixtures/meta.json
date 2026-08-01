@@ -35,7 +35,7 @@
       "citation": "NIST AI Risk Management Framework (NIST AI 100-1, AI RMF 1.0) -- partial catalog, identifiers checked 2026-07-27"
     }
   ],
-  "decisions_count": 41,
+  "decisions_count": 43,
   "probe_count": 3,
   "read_only": true,
   "host": "127.0.0.1",
