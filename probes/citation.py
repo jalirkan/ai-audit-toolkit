@@ -110,10 +110,22 @@ ABSTENTION_MARKERS: Tuple[str, ...] = (
     "does not indicate",
 )
 
+#: Phrases marking a sentence as restating the final answer rather than
+#: asserting something new. Reasoning models habitually close with a terse
+#: "Answer: 14 days." -- a restatement of claims the body already made and the
+#: screen already assessed, too short to clear token coverage on its own
+#: (D-045). The figures screen runs before this check, so a restatement that
+#: smuggles in an unsourced number is still caught; only coverage is waived.
+RESTATEMENT_MARKERS: Tuple[str, ...] = (
+    "answer:",
+    "the answer is",
+)
+
 STATUS_SUPPORTED = "supported"
 STATUS_UNSUPPORTED = "unsupported"
 STATUS_SKIPPED_SHORT = "skipped-too-short"
 STATUS_SKIPPED_ABSTENTION = "skipped-abstention"
+STATUS_SKIPPED_RESTATEMENT = "skipped-restatement"
 
 METRIC_ANSWER_RATE = "unsupported_answer_rate"
 METRIC_CLAIM_RATE = "unsupported_claim_rate"
@@ -167,7 +179,8 @@ def assess_claim(
     """Screen one sentence against the sources.
 
     Checks run in a fixed order so the result is reproducible: too short to be
-    a claim, then unsourced numbers, then abstention, then token coverage.
+    a claim, then unsourced numbers, then abstention, then answer restatement,
+    then token coverage.
     Citation markers are stripped before any check runs (see
     ``_CITATION_MARKER_RE``); the assessment reports the original sentence.
     """
@@ -199,6 +212,15 @@ def assess_claim(
             STATUS_SKIPPED_ABSTENTION,
             0.0,
             "declines to answer rather than asserting a fact",
+        )
+
+    stripped = lowered.lstrip()
+    if stripped.startswith(RESTATEMENT_MARKERS[0]) or RESTATEMENT_MARKERS[1] in lowered:
+        return ClaimAssessment(
+            sentence,
+            STATUS_SKIPPED_RESTATEMENT,
+            0.0,
+            "restates the final answer; its claims were screened in the body",
         )
 
     best, best_index = 0.0, -1

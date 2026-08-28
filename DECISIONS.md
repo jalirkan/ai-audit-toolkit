@@ -572,3 +572,14 @@ it, because the server is where the canonical encoder lives.
 The endpoint also passes the current journal head into the document, so a
 printed workpaper carries the value a reviewer would anchor (D-017). Absent
 when no journal exists, rather than faked.
+
+## D-045 · 2026-08-28 · "Answer:" restatements waive coverage, not the figures screen
+Reasoning models close with a terse restatement of the answer ("Answer: 14
+days."). Its claims were already made and screened in the body, and a
+restatement is structurally too short to clear token coverage, so scoring it
+manufactures exceptions that measure answer style, not faithfulness (observed
+live against qwen3:8b, runs 6147e14a and 0b2f0853). Sentences opening with
+"Answer:" or carrying "the answer is" are skipped as `skipped-restatement` --
+after the unsourced-figure check, so a smuggled number is still caught.
+Trade-off accepted: a wrong but figure-free restatement escapes the screen;
+the body claims it restates do not.

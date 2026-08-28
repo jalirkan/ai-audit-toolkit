@@ -10,6 +10,7 @@ from probes.citation import (
     METRIC_ANSWER_RATE,
     METRIC_CLAIM_RATE,
     STATUS_SKIPPED_ABSTENTION,
+    STATUS_SKIPPED_RESTATEMENT,
     STATUS_SKIPPED_SHORT,
     STATUS_SUPPORTED,
     STATUS_UNSUPPORTED,
@@ -87,6 +88,21 @@ class TestAssessResponse(unittest.TestCase):
             with self.subTest(text=text):
                 [assessment] = assess_response(text, SOURCES)
                 self.assertEqual(assessment.status, STATUS_SKIPPED_ABSTENTION)
+
+    def test_an_answer_restatement_is_not_coverage_scored(self):
+        [assessment] = assess_response("Answer: 42 million dollars.", SOURCES)
+        self.assertEqual(assessment.status, STATUS_SKIPPED_RESTATEMENT)
+        self.assertFalse(assessment.is_exception)
+
+    def test_a_restatement_smuggling_an_invented_figure_is_still_caught(self):
+        [assessment] = assess_response("Answer: 91 million dollars.", SOURCES)
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+        self.assertIn("91", assessment.reason)
+
+    def test_a_therefore_conclusion_naming_the_answer_is_a_restatement(self):
+        text = "Therefore, the answer is that revenue grew during fiscal 2025."
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SKIPPED_RESTATEMENT)
 
     def test_digits_match_a_source_that_spells_the_number_out(self):
         text = "The company opened 3 new distribution centers during the year."
