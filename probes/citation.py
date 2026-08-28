@@ -40,6 +40,7 @@ the sources makes the sentence unsupported outright, regardless of overlap.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
@@ -53,6 +54,14 @@ from probes.text import (
     numbers_in,
     split_sentences,
 )
+
+#: Citation markers -- ``[2]``, ``source [2]``, ``Sources [3]`` -- are pointers
+#: into the source list, not claims about the world, so they must not reach the
+#: screens: left in place, the marker's digit reads as a figure absent from the
+#: sources and a correctly cited answer becomes an exception. Stripping happens
+#: on the text being screened only; the sentence recorded in evidence keeps its
+#: markers so a reviewer sees what the model actually wrote.
+_CITATION_MARKER_RE = re.compile(r"(?i)(?:\bsources?\s*)?\[\s*\d+\s*\]")
 
 DEFAULT_COVERAGE_THRESHOLD = 0.8
 DEFAULT_MIN_CLAIM_TOKENS = 3
@@ -142,8 +151,11 @@ def assess_claim(
 
     Checks run in a fixed order so the result is reproducible: too short to be
     a claim, then unsourced numbers, then abstention, then token coverage.
+    Citation markers are stripped before any check runs (see
+    ``_CITATION_MARKER_RE``); the assessment reports the original sentence.
     """
-    tokens = content_tokens(sentence)
+    screened = _CITATION_MARKER_RE.sub(" ", sentence)
+    tokens = content_tokens(screened)
     if len(tokens) < min_claim_tokens:
         return ClaimAssessment(
             sentence,
@@ -152,7 +164,7 @@ def assess_claim(
             f"fewer than {min_claim_tokens} content tokens",
         )
 
-    claim_numbers = numbers_in(sentence)
+    claim_numbers = numbers_in(screened)
     unsourced_numbers = claim_numbers - source_numbers
     if unsourced_numbers:
         return ClaimAssessment(
@@ -163,7 +175,7 @@ def assess_claim(
             + ", ".join(sorted(unsourced_numbers)),
         )
 
-    lowered = sentence.lower()
+    lowered = screened.lower()
     if any(marker in lowered for marker in ABSTENTION_MARKERS):
         return ClaimAssessment(
             sentence,
@@ -186,7 +198,7 @@ def assess_claim(
         # materials" differs by one dropped token. Checked explicitly, and
         # only where the claim would otherwise have passed.
         if source_texts and 0 <= best_index < len(source_texts):
-            if is_negated(sentence) != is_negated(source_texts[best_index]):
+            if is_negated(screened) != is_negated(source_texts[best_index]):
                 return ClaimAssessment(
                     sentence,
                     STATUS_UNSUPPORTED,

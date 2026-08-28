@@ -49,6 +49,25 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
         self.assertIn("91", assessment.reason)
 
+    def test_an_inline_citation_marker_is_not_a_fabricated_figure(self):
+        # First observed against a live endpoint: the model answered correctly
+        # and cited inline, and the marker's digit tripped the figure screen.
+        text = (
+            "Acme Corp reported revenue of 42 million dollars in fiscal 2025, "
+            "as stated in source [1]."
+        )
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
+    def test_a_fabricated_figure_beside_a_citation_marker_is_still_caught(self):
+        text = (
+            "Acme Corp reported revenue of 91 million dollars in fiscal 2025, "
+            "as stated in source [1]."
+        )
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+        self.assertIn("91", assessment.reason)
+
     def test_an_unrelated_assertion_is_unsupported(self):
         [assessment] = assess_response(OFF_TOPIC, SOURCES)
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
