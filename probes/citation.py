@@ -192,6 +192,15 @@ def _best_matching_clause(claim_tokens: Set[str], source_text: str) -> str:
     return max(clauses, key=lambda clause: coverage(claim_tokens, content_tokens(clause)))
 
 
+#: Polarity is only decisive between texts that otherwise say the same thing.
+#: An inversion is dangerous precisely because it is near-identical to its
+#: source -- "does ship hazardous materials" against "does not ship hazardous
+#: materials" -- so the check earns its keep at high overlap and only
+#: manufactures exceptions below it, where a difference in wording, not
+#: meaning, explains the mismatch.
+POLARITY_MIN_CLAUSE_COVERAGE = 0.8
+
+
 def assess_claim(
     sentence: str,
     source_token_sets: Sequence[Set[str]],
@@ -270,7 +279,11 @@ def assess_claim(
         # screen can say, said wrongly (D-047).
         if source_texts and 0 <= best_index < len(source_texts):
             matched = _best_matching_clause(tokens, source_texts[best_index])
-            if is_negated(screened) != is_negated(matched):
+            matched_coverage = coverage(tokens, content_tokens(matched))
+            if (
+                matched_coverage >= POLARITY_MIN_CLAUSE_COVERAGE
+                and is_negated(screened) != is_negated(matched)
+            ):
                 return ClaimAssessment(
                     sentence,
                     STATUS_UNSUPPORTED,

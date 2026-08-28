@@ -157,6 +157,20 @@ class TestAssessResponse(unittest.TestCase):
         [assessment] = assess_response(text, sources)
         self.assertEqual(assessment.status, STATUS_SUPPORTED)
 
+    def test_a_conditional_answer_about_that_condition_is_supported(self):
+        # The mirror of the case above: the question asks about the condition,
+        # so the negation sits in the claim instead of the source.
+        sources = (
+            "Administrator access is reviewed every 90 days and is revoked "
+            "automatically if the review is not completed.",
+        )
+        text = (
+            "If an Administrator access review is not completed, the access "
+            "is revoked automatically."
+        )
+        [assessment] = assess_response(text, sources)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
     def test_a_claim_that_inverts_its_source_is_unsupported(self):
         # The failure token overlap cannot see: negation words are stopwords,
         # so a claim and its exact opposite match a source equally well.

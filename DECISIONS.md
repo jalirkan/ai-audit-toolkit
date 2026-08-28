@@ -601,6 +601,14 @@ on the evidence is the honest complement, and is not yet done.
 source read as a negative assertion, and a verbatim-correct answer quoting the
 first half was labelled as asserting the opposite of its source -- the most
 damaging thing this screen can say, said wrongly. The check now compares the
-claim against the clause of the source it best matches (`split_clauses`).
+claim against the clause of the source it best matches (`split_clauses`), and
+fires only where that clause covers the claim at 0.8 or better.
+
+The coverage gate is the load-bearing half. Clause splitting alone just moved
+the false positive to the mirror case -- a question *about* the condition
+("what happens if a review is not completed?") puts the negation in the answer
+instead of the source. Gating on overlap dissolves both: an inversion is
+dangerous precisely because it is near-identical to its source, so below that
+overlap a polarity difference is a difference in wording, not in meaning.
 Clause splitting is approximate and deliberately excludes "and"/"or", which
 continue an assertion rather than qualifying it.
