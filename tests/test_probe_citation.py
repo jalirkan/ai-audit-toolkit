@@ -84,6 +84,7 @@ class TestAssessResponse(unittest.TestCase):
             "The sources do not mention a surcharge for Standard delivery.",
             "The sources do not specify further details about the process.",
             "There is no mention of nationwide availability in the sources.",
+            "The sources do not state the per-night limit for accommodation.",
         ):
             with self.subTest(text=text):
                 [assessment] = assess_response(text, SOURCES)

@@ -108,6 +108,8 @@ ABSTENTION_MARKERS: Tuple[str, ...] = (
     "does not specify",
     "do not indicate",
     "does not indicate",
+    "do not state",
+    "does not state",
 )
 
 #: Phrases marking a sentence as restating the final answer rather than
