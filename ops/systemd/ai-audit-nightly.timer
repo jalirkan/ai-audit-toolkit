@@ -1,0 +1,31 @@
+[Unit]
+Description=Run the nightly AI assurance battery at 02:30
+Documentation=file:///home/justin-a/code/ai-audit-toolkit/README.md
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+
+# This machine is suspended overnight rather than shut down, and is sometimes
+# fully powered off or logged out for a weekend -- which is exactly what
+# Persistent= is for. systemd stores the last trigger time on disk, so a run
+# whose 02:30 passed while the user manager was not running happens shortly
+# after the next login instead of being silently skipped. (A plain suspend is
+# also covered: an OnCalendar elapse that passed while asleep fires on resume.)
+# Without this, a laptop-shaped usage pattern turns "nightly" into "whenever the
+# machine happened to be awake at 02:30", and gaps in a drift record are the one
+# thing a monitoring baseline cannot tolerate.
+Persistent=true
+
+# The system is not woken to run this; WakeSystem would need root and there is
+# no reason to spin up a GPU at 02:30 on a sleeping desktop. A missed run is
+# picked up on resume, per Persistent= above.
+WakeSystem=false
+
+# Jitter, for two reasons. On a normal night it keeps the battery from starting
+# in lockstep with every other 02:30 job. On a resume it matters more: the
+# catch-up run would otherwise launch into the burst of units that all fire at
+# once when the machine wakes, and fight them for the GPU and the disk.
+RandomizedDelaySec=20min
+
+[Install]
+WantedBy=timers.target

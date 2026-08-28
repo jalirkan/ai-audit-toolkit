@@ -16,6 +16,7 @@ from probes.text import (
     jaccard,
     normalize_for_match,
     numbers_in,
+    split_clauses,
     split_sentences,
     tokenize,
 )
@@ -243,3 +244,30 @@ class TestClusterBySimilarity(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSplitClauses(unittest.TestCase):
+    def test_a_single_clause_sentence_is_returned_whole(self):
+        text = "Administrator access is reviewed every 90 days."
+        self.assertEqual(split_clauses(text), [text])
+
+    def test_a_trailing_condition_becomes_its_own_clause(self):
+        text = (
+            "Administrator access is reviewed every 90 days and is revoked "
+            "automatically if the review is not completed."
+        )
+        clauses = split_clauses(text)
+        self.assertEqual(len(clauses), 2)
+        self.assertFalse(is_negated(clauses[0]))
+        self.assertTrue(is_negated(clauses[1]))
+
+    def test_a_semicolon_separates_clauses(self):
+        text = (
+            "Steward and Administrator roles require a hardware key; all "
+            "other roles may sign in with a password alone."
+        )
+        self.assertEqual(len(split_clauses(text)), 2)
+
+    def test_and_does_not_split_a_single_assertion(self):
+        text = "Northwind does not ship hazardous materials or live animals."
+        self.assertEqual(split_clauses(text), [text])

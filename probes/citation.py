@@ -52,6 +52,7 @@ from probes.text import (
     coverage,
     is_negated,
     numbers_in,
+    split_clauses,
     split_sentences,
 )
 
@@ -64,13 +65,23 @@ from probes.text import (
 #: stopwords and a short sentence pays real coverage for them. Stripping
 #: happens on the text being screened only; the sentence recorded in evidence
 #: keeps its markers so a reviewer sees what the model actually wrote.
-_CITATION_MARKER_RE = re.compile(
-    r"(?i)"
+#: Models cite both ways -- "source [4]" and a bare "(source 4)" -- and an
+#: unbracketed marker is the more dangerous of the two, because its digit
+#: reaches the figures screen and books a fabricated-figure exception against a
+#: correctly cited answer. The bare form therefore requires the word "source"
+#: to avoid swallowing real quantities.
+_CITATION_LEAD_IN = (
     r"(?:\b(?:as\s+)?(?:stated|noted|specified|described|mentioned|indicated|quoted)\s+in\s+"
     r"|\b(?:according\s+to|per)\s+"
     r")?"
-    r"(?:\bsources?\s*)?"
-    r"\[\s*\d+(?:\s*,\s*\d+)*\s*\]"
+)
+_CITATION_MARKER_RE = re.compile(
+    r"(?i)"
+    + _CITATION_LEAD_IN
+    + r"(?:"
+    + r"(?:\bsources?\s*)?\[\s*\d+(?:\s*,\s*\d+)*\s*\]"  # source [4] / [4, 6] / [4]
+    + r"|\bsources?\s+\d+(?:\s*,\s*\d+)*\b"  # source 4 / sources 4, 6
+    + r")"
 )
 
 DEFAULT_COVERAGE_THRESHOLD = 0.8
@@ -108,6 +119,8 @@ ABSTENTION_MARKERS: Tuple[str, ...] = (
     "does not specify",
     "do not indicate",
     "does not indicate",
+    "do not state",
+    "does not state",
 )
 
 #: Phrases marking a sentence as restating the final answer rather than
@@ -165,6 +178,27 @@ class ClaimAssessment:
             "best_coverage": round(self.best_coverage, 4),
             "reason": self.reason,
         }
+
+
+def _best_matching_clause(claim_tokens: Set[str], source_text: str) -> str:
+    """The clause of ``source_text`` the claim best overlaps, for polarity.
+
+    Falls back to the whole sentence when it has only one clause, which is the
+    common case.
+    """
+    clauses = split_clauses(source_text)
+    if len(clauses) < 2:
+        return source_text
+    return max(clauses, key=lambda clause: coverage(claim_tokens, content_tokens(clause)))
+
+
+#: Polarity is only decisive between texts that otherwise say the same thing.
+#: An inversion is dangerous precisely because it is near-identical to its
+#: source -- "does ship hazardous materials" against "does not ship hazardous
+#: materials" -- so the check earns its keep at high overlap and only
+#: manufactures exceptions below it, where a difference in wording, not
+#: meaning, explains the mismatch.
+POLARITY_MIN_CLAUSE_COVERAGE = 0.8
 
 
 def assess_claim(
@@ -236,8 +270,20 @@ def assess_claim(
         # ship hazardous materials" against "does not ship hazardous
         # materials" differs by one dropped token. Checked explicitly, and
         # only where the claim would otherwise have passed.
+        #
+        # Against the clause the claim actually matches, not the whole source
+        # sentence: a negation inside a trailing condition ("revoked if the
+        # review is not completed") is not the source asserting a negative,
+        # and comparing against it labels a verbatim-correct answer as
+        # asserting the opposite of its source -- the most damaging thing this
+        # screen can say, said wrongly (D-047).
         if source_texts and 0 <= best_index < len(source_texts):
-            if is_negated(screened) != is_negated(source_texts[best_index]):
+            matched = _best_matching_clause(tokens, source_texts[best_index])
+            matched_coverage = coverage(tokens, content_tokens(matched))
+            if (
+                matched_coverage >= POLARITY_MIN_CLAUSE_COVERAGE
+                and is_negated(screened) != is_negated(matched)
+            ):
                 return ClaimAssessment(
                     sentence,
                     STATUS_UNSUPPORTED,

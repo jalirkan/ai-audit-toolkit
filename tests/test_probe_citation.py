@@ -69,6 +69,21 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
         self.assertIn("91", assessment.reason)
 
+    def test_an_unbracketed_source_reference_is_still_a_marker(self):
+        # Observed live: the model wrote "(source 4)", whose digit then read as
+        # a figure absent from the sources.
+        text = (
+            "Acme Corp reported revenue of 42 million dollars in fiscal 2025 "
+            "(source 1)."
+        )
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
+    def test_a_bare_quantity_is_not_mistaken_for_a_marker(self):
+        # The bare form requires the word "source"; plain numbers still screen.
+        [assessment] = assess_response(FABRICATED_FIGURE, SOURCES)
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+
     def test_a_citation_lead_in_does_not_dilute_coverage(self):
         text = (
             "According to source [1], Acme Corp reported revenue of 42 "
@@ -84,6 +99,7 @@ class TestAssessResponse(unittest.TestCase):
             "The sources do not mention a surcharge for Standard delivery.",
             "The sources do not specify further details about the process.",
             "There is no mention of nationwide availability in the sources.",
+            "The sources do not state the per-night limit for accommodation.",
         ):
             with self.subTest(text=text):
                 [assessment] = assess_response(text, SOURCES)
@@ -128,6 +144,32 @@ class TestAssessResponse(unittest.TestCase):
         [assessment] = assess_response("Yes.", SOURCES)
         self.assertEqual(assessment.status, STATUS_SKIPPED_SHORT)
         self.assertFalse(assessment.was_checked)
+
+    def test_a_negation_inside_a_condition_is_not_the_sources_polarity(self):
+        # Observed live: a verbatim-correct answer was labelled as asserting
+        # the opposite of its source, because the source's trailing condition
+        # carried a "not".
+        sources = (
+            "Administrator access is reviewed every 90 days and is revoked "
+            "automatically if the review is not completed.",
+        )
+        text = "Administrator access is reviewed every 90 days."
+        [assessment] = assess_response(text, sources)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
+    def test_a_conditional_answer_about_that_condition_is_supported(self):
+        # The mirror of the case above: the question asks about the condition,
+        # so the negation sits in the claim instead of the source.
+        sources = (
+            "Administrator access is reviewed every 90 days and is revoked "
+            "automatically if the review is not completed.",
+        )
+        text = (
+            "If an Administrator access review is not completed, the access "
+            "is revoked automatically."
+        )
+        [assessment] = assess_response(text, sources)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
 
     def test_a_claim_that_inverts_its_source_is_unsupported(self):
         # The failure token overlap cannot see: negation words are stopwords,

@@ -1,0 +1,35 @@
+[Unit]
+Description=Nightly AI assurance battery against the local qwen3 endpoint
+Documentation=file:///home/justin-a/code/ai-audit-toolkit/README.md
+
+# No After=network-online.target. This is a user unit talking to a server on
+# localhost, and link state is not the thing that has to be ready -- ollama
+# having finished loading is. The runner waits on the endpoint itself, which is
+# the condition that actually matters and the only one it can verify.
+
+# Also deliberately no ConditionPathExists= on the runner script. A failed
+# condition makes systemd *skip* the unit and record the job as successful, so
+# a repo that had been moved or renamed would produce a green timer and no
+# nightly runs at all -- the silent gap in a drift record that this whole setup
+# exists to prevent. Letting ExecStart fail with 203/EXEC instead is louder and
+# therefore correct.
+
+[Service]
+Type=oneshot
+ExecStart=/home/justin-a/code/ai-audit-toolkit/ops/nightly-audit.sh
+
+# The default start timeout is 90 seconds, which would kill the battery about a
+# minute into an eight-minute run and report it as a timeout rather than as a
+# result. Thirty minutes covers the run plus the five-minute endpoint wait, with
+# room for a night when the GPU is busier than usual.
+TimeoutStartSec=1800
+
+# Nothing here remaps exit codes, and that is the deliberate part. A drift
+# finding leaves the runner with exit code 4; the default treatment of any
+# non-zero exit as a unit failure is what makes the unit go red, which is how an
+# overnight finding reaches a human who was asleep for it. Resist adding
+# SuccessExitStatus=4 the first time the red mark looks like noise.
+
+# Deliberately no [Install] section. The timer is the thing that gets enabled;
+# giving this service WantedBy=default.target would additionally fire a full
+# battery at every login, which is neither wanted nor cheap.

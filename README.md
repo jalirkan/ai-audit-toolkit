@@ -102,7 +102,7 @@ Sixteen out of sixteen puts the Wilson lower bound at 0.806 against a required
 0.900; clearing that line takes 35 items in a category, and six source sentences
 do not yield 35 independent ones. Padding the category with rewordings would
 move the bound without adding evidence, so the harness says inconclusive and
-means it (D-046).
+means it (D-048).
 
 `monitor` is the cron-friendly drift wrapper: same comparison as `drift`, plus a
 status JSON (default `runs/monitor-status.json`) and exit code 4 when drift is
