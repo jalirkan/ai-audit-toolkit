@@ -55,13 +55,23 @@ from probes.text import (
     split_sentences,
 )
 
-#: Citation markers -- ``[2]``, ``source [2]``, ``Sources [3]`` -- are pointers
-#: into the source list, not claims about the world, so they must not reach the
-#: screens: left in place, the marker's digit reads as a figure absent from the
-#: sources and a correctly cited answer becomes an exception. Stripping happens
-#: on the text being screened only; the sentence recorded in evidence keeps its
-#: markers so a reviewer sees what the model actually wrote.
-_CITATION_MARKER_RE = re.compile(r"(?i)(?:\bsources?\s*)?\[\s*\d+\s*\]")
+#: Citation markers -- ``[2]``, ``source [2]``, ``Sources [2, 3]`` -- are
+#: pointers into the source list, not claims about the world, so they must not
+#: reach the screens: left in place, the marker's digit reads as a figure
+#: absent from the sources and a correctly cited answer becomes an exception.
+#: Lead-in phrases that exist only to carry the marker ("as stated in source
+#: [2]", "according to source [4]") go with it, because their verbs are not
+#: stopwords and a short sentence pays real coverage for them. Stripping
+#: happens on the text being screened only; the sentence recorded in evidence
+#: keeps its markers so a reviewer sees what the model actually wrote.
+_CITATION_MARKER_RE = re.compile(
+    r"(?i)"
+    r"(?:\b(?:as\s+)?(?:stated|noted|specified|described|mentioned|indicated|quoted)\s+in\s+"
+    r"|\b(?:according\s+to|per)\s+"
+    r")?"
+    r"(?:\bsources?\s*)?"
+    r"\[\s*\d+(?:\s*,\s*\d+)*\s*\]"
+)
 
 DEFAULT_COVERAGE_THRESHOLD = 0.8
 DEFAULT_MIN_CLAIM_TOKENS = 3
@@ -91,6 +101,13 @@ ABSTENTION_MARKERS: Tuple[str, ...] = (
     "don't have enough",
     "do not have enough",
     "unable to answer",
+    "do not mention",
+    "does not mention",
+    "no mention",
+    "do not specify",
+    "does not specify",
+    "do not indicate",
+    "does not indicate",
 )
 
 STATUS_SUPPORTED = "supported"

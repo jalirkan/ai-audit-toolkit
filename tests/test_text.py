@@ -154,6 +154,14 @@ class TestNumbersIn(unittest.TestCase):
     def test_extracts_plain_numbers(self):
         self.assertEqual(numbers_in("42 units and 7 boxes"), {"42", "7"})
 
+    def test_spelled_out_numbers_normalize_to_digits(self):
+        self.assertEqual(numbers_in("five to seven business days"), {"5", "7"})
+
+    def test_the_word_one_is_left_alone(self):
+        # "one" is usually a pronoun; mapping it would manufacture
+        # fabricated-figure exceptions.
+        self.assertEqual(numbers_in("no one mentioned a figure"), set())
+
     def test_normalizes_thousands_separators(self):
         self.assertEqual(numbers_in("1,200 units"), numbers_in("1200 units"))
 
@@ -164,7 +172,7 @@ class TestNumbersIn(unittest.TestCase):
         self.assertEqual(numbers_in("3.50"), numbers_in("3.5"))
 
     def test_ignores_words(self):
-        self.assertEqual(numbers_in("three new centers"), set())
+        self.assertEqual(numbers_in("several new centers"), set())
 
     def test_word_internal_digits_are_captured_whole(self):
         self.assertEqual(numbers_in("no numbers here"), set())

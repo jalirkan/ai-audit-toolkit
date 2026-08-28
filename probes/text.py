@@ -137,16 +137,37 @@ def split_sentences(text: str) -> List[str]:
     return parts
 
 
+#: Small quantities are as often spelled out as digited -- a source's "five to
+#: seven business days" against an answer's "5-7" -- and the figures screen
+#: compares digit strings, so both sides normalize through this table. Kept
+#: small on purpose: past the tens, prose stops spelling numbers out. "one" is
+#: deliberately absent -- it is usually a pronoun ("no one", "one of the
+#: tiers"), and mapping it manufactures fabricated-figure exceptions.
+_NUMBER_WORDS = {
+    "zero": "0", "two": "2", "three": "3", "four": "4", "five": "5",
+    "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10",
+    "eleven": "11", "twelve": "12", "thirteen": "13", "fourteen": "14",
+    "fifteen": "15", "sixteen": "16", "seventeen": "17", "eighteen": "18",
+    "nineteen": "19", "twenty": "20", "thirty": "30", "forty": "40",
+    "fifty": "50", "sixty": "60", "seventy": "70", "eighty": "80",
+    "ninety": "90",
+}
+
+
 def numbers_in(text: str) -> Set[str]:
     """Numeric tokens, normalized so ``1,200`` and ``1200`` compare equal.
 
     Numbers get their own check because a fabricated figure is the failure mode
     that matters most in a cited answer, and it is precisely the one that
     survives a token-overlap test -- "revenue rose 12%" and "revenue rose 21%"
-    are lexically almost identical.
+    are lexically almost identical. Spelled-out numbers count too, via
+    ``_NUMBER_WORDS``, so typography does not decide whether a figure matches.
     """
     out: Set[str] = set()
     for token in tokenize(text):
+        if token in _NUMBER_WORDS:
+            out.add(_NUMBER_WORDS[token])
+            continue
         if not _NUMERIC_RE.match(token):
             continue
         normalized = token.replace(",", "").rstrip("%")

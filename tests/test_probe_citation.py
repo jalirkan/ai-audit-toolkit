@@ -68,6 +68,31 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
         self.assertIn("91", assessment.reason)
 
+    def test_a_citation_lead_in_does_not_dilute_coverage(self):
+        text = (
+            "According to source [1], Acme Corp reported revenue of 42 "
+            "million dollars in fiscal 2025."
+        )
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+        self.assertEqual(assessment.best_coverage, 1.0)
+
+    def test_common_abstention_phrasings_are_recognized(self):
+        # Each of these scored as an unsupported claim on a live run.
+        for text in (
+            "The sources do not mention a surcharge for Standard delivery.",
+            "The sources do not specify further details about the process.",
+            "There is no mention of nationwide availability in the sources.",
+        ):
+            with self.subTest(text=text):
+                [assessment] = assess_response(text, SOURCES)
+                self.assertEqual(assessment.status, STATUS_SKIPPED_ABSTENTION)
+
+    def test_digits_match_a_source_that_spells_the_number_out(self):
+        text = "The company opened 3 new distribution centers during the year."
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
     def test_an_unrelated_assertion_is_unsupported(self):
         [assessment] = assess_response(OFF_TOPIC, SOURCES)
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
