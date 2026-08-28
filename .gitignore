@@ -16,5 +16,10 @@ __pycache__/
 # os
 .DS_Store
 
-# drift baselines are engagement artifacts; keep them out of the repo
-/baselines/
+# Drift baselines stay out of the repo by default: an engagement baseline
+# carries that engagement's questions and the model's answers to them. The
+# local qwen3 reference is the deliberate exception -- a public model measured
+# on a fictional suite, worth versioning so the drift reference is reviewable
+# and reproducible elsewhere (D-048).
+/baselines/*
+!/baselines/qwen3-8b-nightly.json

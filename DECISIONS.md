@@ -654,3 +654,13 @@ down from 0.324, so `paraphrase`, `entity-swap`, and `term-swap` fail on
 stronger evidence than before. All 56 pre-existing items keep their exact
 screen outcomes; the sources were not touched, because changing them would
 re-screen every item already in the file.
+
+## D-048 · 2026-08-28 · The local reference baseline is versioned; engagement baselines are not
+`/baselines/` was ignored wholesale because a baseline stores the questions put
+to a model and the answers it gave, which on a real engagement is client
+material that has no business in a git remote. The qwen3-8b-nightly reference
+is the exception and is tracked: it measures a public model against a suite of
+deliberately fictional scenarios, and the nightly drift claim is only as
+reviewable as the reference it rests on. The ignore rule now names the
+exception rather than being quietly overridden with `git add -f`, so the file
+and the policy cannot drift apart.
