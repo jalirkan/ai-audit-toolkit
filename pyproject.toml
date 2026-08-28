@@ -1,0 +1,12 @@
+[project]
+name = "ai-audit-toolkit"
+version = "0.1.0"
+description = "Assurance procedures for AI systems: probe batteries, tamper-evident evidence journals, drift monitoring, and generated audit workpapers mapped to NIST AI RMF, ISO/IEC 42001, and the EU AI Act"
+requires-python = ">=3.10"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = false
