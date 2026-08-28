@@ -508,6 +508,10 @@ class Evidence:
     #: The probe configuration used, so the run can be reproduced.
     config: Dict[str, Any] = field(default_factory=dict)
     notes: str = ""
+    #: Known weaknesses of the measurement, carried on the record itself so a
+    #: consumer of the run JSON gets them without parsing the rendered
+    #: workpaper. Optional: absent in older records, so no schema bump.
+    limitations: str = ""
     schema_version: int = SCHEMA_VERSION
 
     def __post_init__(self) -> None:
@@ -573,6 +577,7 @@ class Evidence:
             "measurements": [m.to_dict() for m in self.measurements],
             "config": dict(self.config),
             "notes": self.notes,
+            "limitations": self.limitations,
         }
 
     @classmethod
@@ -595,6 +600,7 @@ class Evidence:
             ),
             config=dict(data.get("config") or {}),
             notes=data.get("notes", ""),
+            limitations=data.get("limitations", ""),
             schema_version=version,
         )
 

@@ -35,14 +35,14 @@
       "citation": "NIST AI Risk Management Framework (NIST AI 100-1, AI RMF 1.0) -- partial catalog, identifiers checked 2026-07-27"
     }
   ],
-  "decisions_count": 43,
+  "decisions_count": 44,
   "probe_count": 3,
   "read_only": true,
   "host": "127.0.0.1",
   "mapping_disclaimer": "A mapping means the procedure produced evidence relevant to the control, never that the control is satisfied. Controls generally require governance, policy, and documentation no test harness supplies. Catalogs are partial: a control's absence is not a statement about it.",
   "paths": {
     "runs": "runs",
-    "journal": "runs\\journal.db",
+    "journal": "runs/journal.db",
     "baselines": "baselines",
     "suites": "suites",
     "datasets": "datasets"

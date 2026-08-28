@@ -154,6 +154,10 @@ class ScreenCheckResult:
     started_at: str
     finished_at: str
     strata: Tuple[StratumResult, ...] = ()
+    #: The probe this check grades, by its registered id. The dataset does not
+    #: carry the probe's name, so without this field the result and the probe
+    #: it grades share no identifier at all.
+    probe_id: str = CitationFaithfulnessProbe.probe_id
 
     @property
     def outcome(self) -> str:
@@ -216,6 +220,7 @@ class ScreenCheckResult:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "dataset_id": self.dataset_id,
+            "probe_id": self.probe_id,
             "outcome": self.outcome,
             "decision": {
                 "outcome": self.decision.outcome,

@@ -31,6 +31,7 @@ everything passes teaches nothing about how the tool behaves when it doesn't:
 | `journal.txt` | Journal entries and a chain verification, including what verification does *not* prove. |
 | `drift.txt` | Version 2 compared against the version 1 baseline. |
 | `coverage.txt` | Framework coverage, gaps included. |
+| `rag-screen-check.json` | The citation screen graded against the golden dataset (D-041), as a first-class artifact naming the probe it grades. Regenerate with `python cli.py rag datasets/northwind-rag-golden.json --screen-only --status-out examples/rag-screen-check.json`. |
 
 ## Two things worth reading closely
 

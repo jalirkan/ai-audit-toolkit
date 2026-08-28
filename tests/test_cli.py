@@ -432,6 +432,7 @@ class TestRag(CliTestCase):
         self.assertEqual(code, cli.EXIT_FINDINGS)
         payload = json.loads(Path(status).read_text(encoding="utf-8"))
         self.assertEqual(payload["outcome"], "fail")
+        self.assertEqual(payload["probe_id"], "citation-faithfulness")
         self.assertIn("accuracy", payload)
         # The per-category detail has to survive into the machine-readable
         # status too, or a monitor consuming it sees only the aggregate.

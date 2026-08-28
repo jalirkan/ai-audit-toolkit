@@ -287,6 +287,9 @@ class TestEvidence(unittest.TestCase):
         self.assertNotEqual(base, make_evidence(outcome=OUTCOME_FAIL).content_hash())
         self.assertNotEqual(base, make_evidence(notes="edited").content_hash())
         self.assertNotEqual(
+            base, make_evidence(limitations="a stated weakness").content_hash()
+        )
+        self.assertNotEqual(
             base, make_evidence(config={"attempts": 3}).content_hash()
         )
         self.assertNotEqual(

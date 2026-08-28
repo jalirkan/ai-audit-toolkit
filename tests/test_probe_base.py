@@ -214,6 +214,7 @@ class _DemoProbe(Probe):
     probe_id = "test-demo-probe"
     title = "Demo"
     procedure = "Sends one prompt."
+    limitations = "One prompt is not a sample."
 
     def run(self, adapter):
         from core.evidence import Trial, utc_now_iso
@@ -304,6 +305,19 @@ class TestEvidenceConstruction(unittest.TestCase):
         evidence = _DemoProbe().run(MockAdapter())[0]
         self.assertTrue(evidence.notes)
         self.assertIn("sample", evidence.notes.lower())
+
+    def test_limitations_travel_on_the_evidence(self):
+        """The stated weakness reaches the run JSON itself, not only the
+        rendered workpaper -- a consumer of the JSON must not need to parse
+        Markdown to learn it (and error evidence carries it too)."""
+        evidence = _DemoProbe().run(MockAdapter())[0]
+        self.assertEqual(evidence.limitations, _DemoProbe.limitations)
+        self.assertEqual(
+            evidence.to_dict()["limitations"], _DemoProbe.limitations
+        )
+        adapter = MockAdapter([MockRule(pattern="hello", error="boom")])
+        errored = _DemoProbe().run_safely(adapter)[0]
+        self.assertEqual(errored.limitations, _DemoProbe.limitations)
 
     def test_fingerprint_matches_the_adapter(self):
         adapter = MockAdapter(seed=7)

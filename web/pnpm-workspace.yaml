@@ -1,4 +1,7 @@
+# esbuild ships a platform binary and its install script links it. Declared
+# here rather than approved interactively so a fresh clone builds without a
+# prompt.
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
 onlyBuiltDependencies:
   - esbuild

@@ -373,6 +373,7 @@ class Probe(abc.ABC):
             measurements=tuple(measurements),
             config=config,
             notes=decision.rationale,
+            limitations=self.limitations,
         )
 
     def error_evidence(
@@ -393,6 +394,7 @@ class Probe(abc.ABC):
             measurements=(),
             config=self.config_dict(),
             notes=f"Procedure could not be completed: {message}",
+            limitations=self.limitations,
         )
 
     def __repr__(self) -> str:  # pragma: no cover - debugging convenience

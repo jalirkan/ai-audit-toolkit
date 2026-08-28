@@ -196,6 +196,15 @@ class TestScreenCheck(unittest.TestCase):
         payload = run_screen_check(load_dataset(GOLDEN)).to_dict()
         self.assertTrue(canonical_json(payload))
 
+    def test_result_names_the_probe_it_grades(self):
+        """The dataset never mentions the probe, so the result must: without
+        probe_id, the check and the probe it grades share no identifier."""
+        from probes.citation import CitationFaithfulnessProbe
+
+        payload = run_screen_check(load_dataset(GOLDEN)).to_dict()
+        self.assertEqual(payload["probe_id"], CitationFaithfulnessProbe.probe_id)
+        self.assertEqual(payload["probe_id"], "citation-faithfulness")
+
 
 class TestLivePath(unittest.TestCase):
     def test_runs_citation_probe_against_dataset_questions(self):

@@ -79,6 +79,7 @@ export interface Evidence {
   measurements: Measurement[];
   config: EvidenceConfig;
   notes: string;
+  limitations: string;
 }
 
 export interface OutcomeCounts {
@@ -221,6 +222,7 @@ export function parseEvidence(raw: unknown, path = "evidence"): Evidence {
     ),
     config: isRecord(raw.config) ? (raw.config as EvidenceConfig) : {},
     notes: typeof raw.notes === "string" ? raw.notes : "",
+    limitations: typeof raw.limitations === "string" ? raw.limitations : "",
   };
 }
 
