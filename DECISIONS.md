@@ -664,3 +664,35 @@ deliberately fictional scenarios, and the nightly drift claim is only as
 reviewable as the reference it rests on. The ignore rule now names the
 exception rather than being quietly overridden with `git add -f`, so the file
 and the policy cannot drift apart.
+
+## D-049 · 2026-08-28 · CI runs the documented verification, and gates the golden set on its artifact
+Every verification of this repository so far has been one person running four
+commands on one machine. That is precisely the evidence the toolkit refuses to
+accept elsewhere, so `.github/workflows/ci.yml` runs the commands README and
+examples/README.md already document — the unit suite on 3.10 and 3.12, then
+`pnpm typecheck`, `pnpm test` and `pnpm build` — on a machine nobody here
+controls. Nothing was relaxed to make it green, and no check was invented for
+CI that a contributor does not already run by hand.
+
+The Python job installs nothing. No pip, no uv, no pytest: D-001 says these
+procedures run with zero install, and a job that installs something is no
+longer testing that. The suite then runs a second time with outbound
+connections refused at `connect()` and at name resolution, loopback excepted
+for the `serve.py` tests. "Offline" is a claim on the front page; a runner that
+happens to have internet cannot tell you whether the suite used it.
+
+The golden set is the awkward one. `rag --screen-only` exits 1 by design, and
+must keep doing so — three categories are cases a lexical screen cannot handle
+and are kept deliberately (D-041, D-046). Gating on the exit code would leave a
+red build whose only cure is deleting the hard categories, which is the exact
+move D-041 forbids. So CI gates on the artifact instead: the run must reproduce
+`examples/rag-screen-check.json`, timestamps aside. A moved accuracy, interval
+or per-category verdict fails the build in either direction — a failing
+category quietly starting to pass is also news, and belongs in a reviewed diff
+to the committed file rather than in silence.
+
+`examples/generate.py` is not checked this way. Its output is stable in
+substance but not byte-for-byte: run ids and journal hashes derive from
+wall-clock timestamps, so diffing the regenerated examples would fail every run
+while nothing had regressed. Making it deterministic would mean freezing time
+in the example, which changes the artifact to suit the test.

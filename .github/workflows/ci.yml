@@ -1,0 +1,213 @@
+# Continuous integration.
+#
+# Every command here is one the repository already documents -- README's
+# "Tests" and "Reading the evidence in a browser" sections, and the
+# regeneration line in examples/README.md. CI adds no checks of its own and
+# relaxes none: no skipped tests, no lowered thresholds, no continue-on-error.
+# What it adds is a witness. Until now every verification of this suite was
+# somebody running commands by hand on one machine, which is exactly the kind
+# of evidence this toolkit exists to refuse elsewhere.
+#
+# Nothing is installed for the Python side -- no pip, no uv, no pytest. That is
+# the check, not an oversight: D-001 says procedures run with zero install and
+# zero network, and a job that installs something stops testing that claim.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python suite (${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the floor pyproject.toml declares and the version README says
+        # the toolkit was developed on. 3.12 is what the workstation runs. Both
+        # were verified locally before this file was written; neither is a
+        # guess, and neither is an upgrade.
+        python-version: ["3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Unit suite
+        run: python -m unittest discover -s tests -t .
+
+      - name: The suite runs offline, asserted rather than assumed
+        run: |
+          # README calls "no network, no API key" a hard constraint. A runner
+          # that happens to have internet cannot tell you whether the suite
+          # used it, so the same discovery runs again with outbound traffic
+          # refused at connect() and at name resolution -- loopback only, since
+          # the serve.py tests bind 127.0.0.1 by design (D-043). A probe that
+          # quietly reached a real endpoint fails here instead of passing.
+          python - <<'PY'
+          import socket
+          import sys
+          import unittest
+
+          LOOPBACK = {"127.0.0.1", "::1", "localhost", "", None}
+          _connect = socket.socket.connect
+          _getaddrinfo = socket.getaddrinfo
+
+
+          def connect(self, address):
+              host = address[0] if isinstance(address, tuple) else address
+              if host not in LOOPBACK:
+                  raise AssertionError("outbound connection attempted: %r" % (address,))
+              return _connect(self, address)
+
+
+          def getaddrinfo(host, *args, **kwargs):
+              if host not in LOOPBACK:
+                  raise AssertionError("name resolution attempted: %r" % (host,))
+              return _getaddrinfo(host, *args, **kwargs)
+
+
+          socket.socket.connect = connect
+          socket.getaddrinfo = getaddrinfo
+
+          result = unittest.main(
+              module=None,
+              argv=["unittest", "discover", "-s", "tests", "-t", "."],
+              exit=False,
+          ).result
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
+
+      - name: Golden-set screen check reproduces the committed result
+        run: |
+          # `rag --screen-only` exits 1 on purpose. Three categories --
+          # paraphrase, entity-swap, term-swap -- are cases a lexical screen
+          # cannot do, and they are kept deliberately: deleting them would
+          # raise the headline number and change nothing real (D-041, D-046,
+          # D-048). So this does not gate on the exit code, and a green CI must
+          # never become a reason to prune the dataset.
+          #
+          # What it gates on is the artifact. The run must reproduce
+          # examples/rag-screen-check.json exactly, timestamps aside -- the
+          # same command examples/README.md documents for regenerating it. A
+          # moved accuracy, interval, or per-category verdict is the regression
+          # worth catching, in either direction: a failing category quietly
+          # starting to pass is news too, and should arrive as a reviewed
+          # change to the committed file rather than as silence.
+          set +e
+          python cli.py rag datasets/northwind-rag-golden.json --screen-only \
+            --status-out "$RUNNER_TEMP/rag-screen-check.json"
+          status=$?
+          set -e
+          # 0 = pass or inconclusive, 1 = findings. Anything else is a crash,
+          # and a crash is still a failure.
+          if [ "$status" -gt 1 ]; then
+            echo "::error::rag --screen-only exited $status, which is not a graded outcome"
+            exit "$status"
+          fi
+          python - "$RUNNER_TEMP/rag-screen-check.json" <<'PY'
+          import difflib
+          import json
+          import sys
+
+          # Wall-clock stamps differ every run and carry no claim.
+          VOLATILE = ("started_at", "finished_at")
+          COMMITTED = "examples/rag-screen-check.json"
+
+
+          def load(path):
+              with open(path, encoding="utf-8") as handle:
+                  payload = json.load(handle)
+              return {k: v for k, v in payload.items() if k not in VOLATILE}
+
+
+          committed = load(COMMITTED)
+          produced = load(sys.argv[1])
+          if committed == produced:
+              print("screen check reproduces %s" % COMMITTED)
+              sys.exit(0)
+
+          for key in sorted(set(committed) | set(produced)):
+              before = committed.get(key)
+              after = produced.get(key)
+              if before == after:
+                  continue
+              print("differs: %s" % key)
+              lines = difflib.unified_diff(
+                  json.dumps(before, indent=2, sort_keys=True).splitlines(),
+                  json.dumps(after, indent=2, sort_keys=True).splitlines(),
+                  "committed",
+                  "this run",
+                  lineterm="",
+                  n=1,
+              )
+              for line in lines:
+                  print("  %s" % line)
+          print(
+              "\nThe screen's measured behaviour moved. If that is intended, "
+              "regenerate %s and commit it." % COMMITTED
+          )
+          sys.exit(1)
+          PY
+
+  web:
+    name: Reviewer front end
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # web/package.json declares no "packageManager" and there is no
+          # .nvmrc, so the versions are pinned here rather than left to drift.
+          # These are the ones the committed pnpm-lock.yaml (lockfileVersion
+          # 9.0) was last installed and verified with. If the workstation moves,
+          # move these with it -- deliberately, in a commit.
+          version: 11.24.0
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install from the lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck # tsc -b --noEmit
+
+      - name: Front-end suite
+        run: pnpm test # vitest run
+
+      - name: Build
+        run: pnpm build # tsc -b && vite build
+
+# Not run here, and why:
+#
+# - `python examples/generate.py`. Its output is stable in substance but not
+#   byte-for-byte: run ids and journal hashes are derived from wall-clock
+#   timestamps, so a `git diff --exit-code examples/` would fail on every run
+#   while nothing had regressed. The part of the example that is reproducible
+#   -- the screen check -- is checked above.
+# - `python cli.py run ... --adapter anthropic|openai`. Needs a key and a real
+#   endpoint. Gating CI on a live model would make the build depend on a
+#   third party's behaviour, and evidence about an endpoint belongs in the
+#   journal, not in a build log.
+# - `ops/`. Nightly systemd units and their wrappers; they schedule runs
+#   against a live model on one host and have no offline path.
