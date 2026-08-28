@@ -583,3 +583,45 @@ live against qwen3:8b, runs 6147e14a and 0b2f0853). Sentences opening with
 after the unsourced-figure check, so a smuggled number is still caught.
 Trade-off accepted: a wrong but figure-free restatement escapes the screen;
 the body claims it restates do not.
+
+## D-046 · 2026-08-28 · Equal strata of 16; a perfect category still reads inconclusive
+*Amends D-041, which set the strata but not their size.*
+
+The golden set carried 8 items in most categories and 4 in abstention and
+off-topic. Every category the screen handles therefore scored a perfect 1.000
+and reported **inconclusive**, because a Wilson lower bound on 8/8 is 0.676
+against a required 0.900. The set now carries **16 items in each of the eight
+categories**, 128 in total.
+
+Equal strata are the point of the sizing, not a tidiness preference. The
+overall figure is an unweighted mean over the eight failure modes rather than
+an accident of how many of each got written, which is what D-041 objected to in
+the first place. The two categories that were at 4 were the weakest evidence in
+the file and had no business being the smallest.
+
+**Doubling does not make the passing categories pass, and that is worth stating
+plainly.** For a category with no misses the Wilson lower bound is `n / (n +
+z²)`, so at 95% confidence it clears 0.900 only from **n = 35**. Sixteen buys
+0.806, up from 0.676. The five categories the screen handles still read
+inconclusive, and the honest description of that result is "16 out of 16, and
+16 is not enough", not "nearly passing".
+
+Padding to 35 was available and refused. Six source sentences carry perhaps a
+dozen atomic facts; reaching 35 verbatim items means three or four rewordings
+of each, and near-duplicate items are not independent draws. The interval would
+narrow while the evidence stayed where it was — manufacturing a pass by
+composition, which is the exact move D-041 exists to forbid, taken from the
+other end. Lowering `DEFAULT_MIN_SCREEN_ACCURACY` or raising
+`DEFAULT_STRATUM_MIN_SAMPLE` would have been the same trick in a different
+place. Neither was touched.
+
+Certifying a category the screen handles needs a wider closed-context corpus,
+not more variants of the same six sentences. Until someone writes one, the
+harness reports inconclusive, which is a true statement about what this dataset
+can support.
+
+The failing categories tightened for free: 0/16 puts the upper bound at 0.194,
+down from 0.324, so `paraphrase`, `entity-swap`, and `term-swap` fail on
+stronger evidence than before. All 56 pre-existing items keep their exact
+screen outcomes; the sources were not touched, because changing them would
+re-screen every item already in the file.

@@ -81,12 +81,12 @@ lexical screen cannot handle — correct paraphrase, entity swaps, subtle term
 substitutions — and reports accuracy per category rather than as one number:
 
 ```
-    [INCONCLUSIVE] verbatim          1.000 (95% CI [0.676, 1.000], 8/8)
-    [        FAIL] paraphrase        0.000 (95% CI [0.000, 0.324], 0/8)
-    [INCONCLUSIVE] unsourced-number  1.000 (95% CI [0.676, 1.000], 8/8)
-    [INCONCLUSIVE] negation-flip     1.000 (95% CI [0.676, 1.000], 8/8)
-    [        FAIL] entity-swap       0.000 (95% CI [0.000, 0.324], 0/8)
-    [        FAIL] term-swap         0.000 (95% CI [0.000, 0.324], 0/8)
+    [INCONCLUSIVE] verbatim          1.000 (95% CI [0.806, 1.000], 16/16)
+    [        FAIL] paraphrase        0.000 (95% CI [0.000, 0.194], 0/16)
+    [INCONCLUSIVE] unsourced-number  1.000 (95% CI [0.806, 1.000], 16/16)
+    [INCONCLUSIVE] negation-flip     1.000 (95% CI [0.806, 1.000], 16/16)
+    [        FAIL] entity-swap       0.000 (95% CI [0.000, 0.194], 0/16)
+    [        FAIL] term-swap         0.000 (95% CI [0.000, 0.194], 0/16)
 ```
 
 An earlier version of this dataset reported 100% accuracy, because it contained
@@ -96,6 +96,13 @@ author wrote, and deleting the hard items would raise it while changing nothing
 real. So the hard items stay, the score is stratified, and the verdict is taken
 per category. Use this to know where the screen can be relied on, not to certify
 it.
+
+The five categories reading `INCONCLUSIVE` are perfect scores, not near misses.
+Sixteen out of sixteen puts the Wilson lower bound at 0.806 against a required
+0.900; clearing that line takes 35 items in a category, and six source sentences
+do not yield 35 independent ones. Padding the category with rewordings would
+move the bound without adding evidence, so the harness says inconclusive and
+means it (D-046).
 
 `monitor` is the cron-friendly drift wrapper: same comparison as `drift`, plus a
 status JSON (default `runs/monitor-status.json`) and exit code 4 when drift is
@@ -199,7 +206,7 @@ none:
 - **The screens are lexical.** There is no semantic model here. Consistency
   clustering, citation support, and canary detection are all token matching.
   Each probe states what that costs, and those statements are rendered into the
-  workpaper next to the result. The citation screen is 0-for-8 on paraphrase,
+  workpaper next to the result. The citation screen is 0-for-16 on paraphrase,
   entity swaps, and term swaps in the shipped golden set — measured, not
   estimated. It does catch invented figures and inverted polarity.
 - **The injection leak rate is a lower bound.** Encoded or acrostic
