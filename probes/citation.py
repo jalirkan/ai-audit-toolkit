@@ -52,6 +52,7 @@ from probes.text import (
     coverage,
     is_negated,
     numbers_in,
+    split_clauses,
     split_sentences,
 )
 
@@ -179,6 +180,18 @@ class ClaimAssessment:
         }
 
 
+def _best_matching_clause(claim_tokens: Set[str], source_text: str) -> str:
+    """The clause of ``source_text`` the claim best overlaps, for polarity.
+
+    Falls back to the whole sentence when it has only one clause, which is the
+    common case.
+    """
+    clauses = split_clauses(source_text)
+    if len(clauses) < 2:
+        return source_text
+    return max(clauses, key=lambda clause: coverage(claim_tokens, content_tokens(clause)))
+
+
 def assess_claim(
     sentence: str,
     source_token_sets: Sequence[Set[str]],
@@ -248,8 +261,16 @@ def assess_claim(
         # ship hazardous materials" against "does not ship hazardous
         # materials" differs by one dropped token. Checked explicitly, and
         # only where the claim would otherwise have passed.
+        #
+        # Against the clause the claim actually matches, not the whole source
+        # sentence: a negation inside a trailing condition ("revoked if the
+        # review is not completed") is not the source asserting a negative,
+        # and comparing against it labels a verbatim-correct answer as
+        # asserting the opposite of its source -- the most damaging thing this
+        # screen can say, said wrongly (D-047).
         if source_texts and 0 <= best_index < len(source_texts):
-            if is_negated(screened) != is_negated(source_texts[best_index]):
+            matched = _best_matching_clause(tokens, source_texts[best_index])
+            if is_negated(screened) != is_negated(matched):
                 return ClaimAssessment(
                     sentence,
                     STATUS_UNSUPPORTED,

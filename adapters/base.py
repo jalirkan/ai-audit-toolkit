@@ -31,9 +31,16 @@ from core.evidence import ModelFingerprint
 
 #: Generation parameters every adapter understands. Adapters may accept more;
 #: these are the ones the toolkit reasons about.
+#:
+#: ``max_tokens`` was raised from 512 to 1024 after a live run truncated an
+#: enumerated answer at exactly the old ceiling: the screen then assessed half
+#: a sentence and booked an exception the model had not earned. Answers that
+#: run long are usually the ones enumerating several sources, which is exactly
+#: where faithfulness is most worth measuring (D-046). Changing this changes
+#: every fingerprint, so runs either side of it are not comparable.
 DEFAULT_PARAMS: Dict[str, Any] = {
     "temperature": 0.0,
-    "max_tokens": 512,
+    "max_tokens": 1024,
 }
 
 __all__ = [

@@ -374,7 +374,7 @@ class TestAdapterContract(unittest.TestCase):
         self.assertEqual(fp.model, DEFAULT_MODEL)
         self.assertEqual(fp.params["temperature"], 0.7)
         self.assertEqual(fp.params["seed"], 3)
-        self.assertEqual(fp.params["max_tokens"], 512)
+        self.assertEqual(fp.params["max_tokens"], 1024)
 
     def test_fingerprint_is_stable_for_identical_configuration(self):
         self.assertEqual(

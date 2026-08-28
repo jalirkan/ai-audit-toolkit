@@ -62,6 +62,7 @@ __all__ = [
     "content_tokens",
     "jaccard",
     "coverage",
+    "split_clauses",
     "split_sentences",
     "numbers_in",
     "normalize_for_match",
@@ -120,6 +121,32 @@ def coverage(claim: Set[str], source: Set[str]) -> float:
     if not claim:
         return 1.0
     return len(claim & source) / len(claim)
+
+
+#: Where a sentence hands off to a clause that carries its own polarity: a
+#: semicolon, or a subordinating conjunction. Deliberately does not include
+#: "and"/"or", which usually continue the same assertion rather than qualifying
+#: it.
+_CLAUSE_BOUNDARY_RE = re.compile(
+    r"(?i);|,?\s+\b(?:if|unless|when|while|until|provided\s+that|provided|"
+    r"because|although|though|whereas|except\s+that|except|so\s+that|in\s+case)\b"
+)
+
+
+def split_clauses(text: str) -> List[str]:
+    """Split a sentence into clauses that can each carry their own polarity.
+
+    Whole-sentence negation detection reads "reviewed every 90 days and revoked
+    if the review is *not* completed" as a negated claim, so a correct answer
+    quoting the first half is judged to assert the opposite of its source. The
+    negation belongs to the condition, not to the assertion. Splitting lets a
+    polarity check compare the claim against the clause it actually matches.
+
+    Approximate, like everything else here: no parsing, just the boundaries
+    where English usually changes what it is asserting about.
+    """
+    parts = [part.strip(" ,;") for part in _CLAUSE_BOUNDARY_RE.split(text)]
+    return [part for part in parts if part]
 
 
 def split_sentences(text: str) -> List[str]:

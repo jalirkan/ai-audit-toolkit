@@ -145,6 +145,18 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_SKIPPED_SHORT)
         self.assertFalse(assessment.was_checked)
 
+    def test_a_negation_inside_a_condition_is_not_the_sources_polarity(self):
+        # Observed live: a verbatim-correct answer was labelled as asserting
+        # the opposite of its source, because the source's trailing condition
+        # carried a "not".
+        sources = (
+            "Administrator access is reviewed every 90 days and is revoked "
+            "automatically if the review is not completed.",
+        )
+        text = "Administrator access is reviewed every 90 days."
+        [assessment] = assess_response(text, sources)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
     def test_a_claim_that_inverts_its_source_is_unsupported(self):
         # The failure token overlap cannot see: negation words are stopwords,
         # so a claim and its exact opposite match a source equally well.

@@ -583,3 +583,24 @@ live against qwen3:8b, runs 6147e14a and 0b2f0853). Sentences opening with
 after the unsourced-figure check, so a smuggled number is still caught.
 Trade-off accepted: a wrong but figure-free restatement escapes the screen;
 the body claims it restates do not.
+
+## D-046 · 2026-08-28 · max_tokens is 1024, and runs across the change are not comparable
+A live run truncated an enumerated answer at exactly 512 completion tokens, so
+the screen assessed half a sentence and booked an exception the model had not
+earned. Answers that run long are the ones listing several sources, which is
+where faithfulness is most worth measuring. Raised to 1024. This is a
+fingerprinted generation parameter (D-009), so every run before this change
+compares against a different configuration and drift across the boundary is
+meaningless -- the qwen3-8b-nightly baseline was re-anchored after it.
+Truncation is still possible at 1024; detecting it and recording a limitation
+on the evidence is the honest complement, and is not yet done.
+
+## D-047 · 2026-08-28 · Polarity is compared against the matched clause
+`is_negated` reads a whole sentence, so a negation inside a trailing condition
+("reviewed every 90 days and revoked if the review is not completed") made the
+source read as a negative assertion, and a verbatim-correct answer quoting the
+first half was labelled as asserting the opposite of its source -- the most
+damaging thing this screen can say, said wrongly. The check now compares the
+claim against the clause of the source it best matches (`split_clauses`).
+Clause splitting is approximate and deliberately excludes "and"/"or", which
+continue an assertion rather than qualifying it.
