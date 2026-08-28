@@ -7,8 +7,9 @@ can plant-signal-test the lexical check offline without a model.
 
 from __future__ import annotations
 
+import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, Mapping, Tuple, Union
 
@@ -138,6 +139,13 @@ class GoldenDataset:
     items: Tuple[GoldenItem, ...]
     description: str = ""
     schema_version: int = SCHEMA_VERSION
+    #: sha256 of the file this was read from, set by `load_dataset`. Empty for a
+    #: dataset built in memory, which has no bytes to name.
+    #:
+    #: `id` is an identity and not a version: it stayed "northwind-rag-golden"
+    #: while the set grew from 56 items to 128, so a result naming only the id
+    #: cannot say which dataset produced it. The hash can.
+    content_sha256: str = ""
 
     def __post_init__(self) -> None:
         if not self.id:
@@ -214,4 +222,7 @@ def load_dataset(path: Union[str, Path]) -> GoldenDataset:
         raise ValueError(f"dataset {target} is not valid JSON: {exc}") from exc
     if not isinstance(payload, dict):
         raise ValueError(f"dataset {target} must be a JSON object")
-    return GoldenDataset.from_dict(payload)
+    # Hashed as read, before parsing: the bytes are what a consumer can compare
+    # against, and a re-serialised copy would not match the file on disk.
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    return replace(GoldenDataset.from_dict(payload), content_sha256=f"sha256:{digest}")

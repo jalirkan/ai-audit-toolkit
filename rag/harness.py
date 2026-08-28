@@ -158,6 +158,15 @@ class ScreenCheckResult:
     #: carry the probe's name, so without this field the result and the probe
     #: it grades share no identifier at all.
     probe_id: str = CitationFaithfulnessProbe.probe_id
+    #: sha256 of the dataset file this was computed against.
+    #:
+    #: `dataset_id` names which dataset; this names which VERSION of it. When
+    #: the golden set went from 56 items to 128 the accuracy moved from 0.571 to
+    #: 0.625 and every stratum changed, while `dataset_id` stayed put — so a
+    #: consumer holding this result could not tell which input produced it, and
+    #: neither could a later reader of the repository. Empty where the dataset
+    #: was built in memory rather than read from a file.
+    dataset_sha256: str = ""
 
     @property
     def outcome(self) -> str:
@@ -220,6 +229,7 @@ class ScreenCheckResult:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "dataset_id": self.dataset_id,
+            "dataset_sha256": self.dataset_sha256,
             "probe_id": self.probe_id,
             "outcome": self.outcome,
             "decision": {
@@ -417,6 +427,7 @@ def run_screen_check(
     finished_at = utc_now_iso()
     return ScreenCheckResult(
         dataset_id=dataset.id,
+        dataset_sha256=dataset.content_sha256,
         decision=decision,
         accuracy=accuracy,
         true_positives=Measurement.count(
