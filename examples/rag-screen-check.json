@@ -1,5 +1,6 @@
 {
   "dataset_id": "northwind-rag-golden",
+  "dataset_sha256": "sha256:3eb9ec9f8df34d5648801ed41a9543d7374cc2cb826051fa5638f93ccea49fd3",
   "probe_id": "citation-faithfulness",
   "outcome": "fail",
   "decision": {
@@ -2547,6 +2548,6 @@
       "unsupported_count": 1
     }
   ],
-  "started_at": "2026-08-28T10:58:28.581290Z",
-  "finished_at": "2026-08-28T10:58:28.586058Z"
+  "started_at": "2026-08-28T20:01:19.134215Z",
+  "finished_at": "2026-08-28T20:01:19.139552Z"
 }
