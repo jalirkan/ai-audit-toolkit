@@ -64,13 +64,23 @@ from probes.text import (
 #: stopwords and a short sentence pays real coverage for them. Stripping
 #: happens on the text being screened only; the sentence recorded in evidence
 #: keeps its markers so a reviewer sees what the model actually wrote.
-_CITATION_MARKER_RE = re.compile(
-    r"(?i)"
+#: Models cite both ways -- "source [4]" and a bare "(source 4)" -- and an
+#: unbracketed marker is the more dangerous of the two, because its digit
+#: reaches the figures screen and books a fabricated-figure exception against a
+#: correctly cited answer. The bare form therefore requires the word "source"
+#: to avoid swallowing real quantities.
+_CITATION_LEAD_IN = (
     r"(?:\b(?:as\s+)?(?:stated|noted|specified|described|mentioned|indicated|quoted)\s+in\s+"
     r"|\b(?:according\s+to|per)\s+"
     r")?"
-    r"(?:\bsources?\s*)?"
-    r"\[\s*\d+(?:\s*,\s*\d+)*\s*\]"
+)
+_CITATION_MARKER_RE = re.compile(
+    r"(?i)"
+    + _CITATION_LEAD_IN
+    + r"(?:"
+    + r"(?:\bsources?\s*)?\[\s*\d+(?:\s*,\s*\d+)*\s*\]"  # source [4] / [4, 6] / [4]
+    + r"|\bsources?\s+\d+(?:\s*,\s*\d+)*\b"  # source 4 / sources 4, 6
+    + r")"
 )
 
 DEFAULT_COVERAGE_THRESHOLD = 0.8

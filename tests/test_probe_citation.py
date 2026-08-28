@@ -69,6 +69,21 @@ class TestAssessResponse(unittest.TestCase):
         self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
         self.assertIn("91", assessment.reason)
 
+    def test_an_unbracketed_source_reference_is_still_a_marker(self):
+        # Observed live: the model wrote "(source 4)", whose digit then read as
+        # a figure absent from the sources.
+        text = (
+            "Acme Corp reported revenue of 42 million dollars in fiscal 2025 "
+            "(source 1)."
+        )
+        [assessment] = assess_response(text, SOURCES)
+        self.assertEqual(assessment.status, STATUS_SUPPORTED)
+
+    def test_a_bare_quantity_is_not_mistaken_for_a_marker(self):
+        # The bare form requires the word "source"; plain numbers still screen.
+        [assessment] = assess_response(FABRICATED_FIGURE, SOURCES)
+        self.assertEqual(assessment.status, STATUS_UNSUPPORTED)
+
     def test_a_citation_lead_in_does_not_dilute_coverage(self):
         text = (
             "According to source [1], Acme Corp reported revenue of 42 "
