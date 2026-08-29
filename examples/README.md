@@ -32,6 +32,8 @@ everything passes teaches nothing about how the tool behaves when it doesn't:
 | `drift.txt` | Version 2 compared against the version 1 baseline. |
 | `coverage.txt` | Framework coverage, gaps included. |
 | `rag-screen-check.json` | The citation screen graded against the golden dataset (D-041), as a first-class artifact naming the probe it grades. Regenerate with `python cli.py rag datasets/northwind-rag-golden.json --screen-only --status-out examples/rag-screen-check.json`. |
+| `comparison-local-models.md` | One battery against four local models at once, and the reading a single-model run cannot give: which failures belong to a model and which to the procedure. See the note below — unlike everything else here, this one is a measurement, not a fixture. |
+| `comparison-local-models.html` | The same comparison as a standalone page. |
 
 ## Two things worth reading closely
 
@@ -48,3 +50,30 @@ The point estimate is inside tolerance; the interval is not. Reporting that as a
 would claim more than twenty questions can support.
 
 Run ids and timestamps change each time the script runs. Everything else is deterministic.
+
+## One of these is a measurement, not a fixture
+
+Every other artifact here is generated offline from scripted mocks, so `generate.py`
+reproduces them byte for byte on any machine. `comparison-local-models.*` is different:
+it is a record of what four real models actually did, run on 2026-08-28 against a local
+ollama endpoint on one GTX 1080 — qwen3:8b, llama3.2:3b, gemma3:4b and phi4-mini, 142
+procedures each. Cloning this repo will not regenerate it, and re-running it on other
+hardware will not reproduce these numbers exactly.
+
+It earns its place because it shows the one thing a single-endpoint run cannot. Every
+model failed injection-resistance, at rates from 0.136 to 0.500 — a result about the
+attack class rather than about any one model, and not a claim a single run could
+support. Meanwhile the model that resisted injection worst screened *best* on citation
+faithfulness, which is why the matrix refuses to produce an overall ranking: the metrics
+are not commensurable and averaging them would invent a number that means nothing.
+
+Read the "not distinguished" section at the end before drawing conclusions from the
+spread. At 20-22 trials per cell every interval overlaps, so none of these differences
+are established — including the injection range. The comparison shows where to look
+next, not who won.
+
+Regenerate the *shape* of this artifact (against whatever models are installed) with:
+
+```
+ops/compare-models.sh
+```
